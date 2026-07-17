@@ -214,12 +214,24 @@
       document.getElementById('modal-overlay').style.display = 'block';
       document.getElementById(id).style.display = 'block';
       if (id === 'modal-params') loadCurrentParams();
+      if (id === 'modal-index') resetIndexModal();
     }
 
     function closeModal(id) {
       document.getElementById('modal-overlay').style.display = 'none';
       var el = document.getElementById(id);
       if (el) el.style.display = 'none';
+    }
+
+    function resetIndexModal() {
+      var pre = document.getElementById('index-status-pre');
+      var progress = document.getElementById('index-status-progress');
+      var done = document.getElementById('index-status-done');
+      var okBtn = document.getElementById('btn-index-done');
+      if (pre) pre.style.display = 'block';
+      if (progress) progress.style.display = 'none';
+      if (done) done.style.display = 'none';
+      if (okBtn) okBtn.style.display = 'none';
     }
 
     function openEvalPage() {
