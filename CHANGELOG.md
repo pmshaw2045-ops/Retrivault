@@ -35,6 +35,12 @@
 - Hit Rate / MRR 未限制在 top_k 范围内计算
 - Eval 前后对比 Delta 显示优化
 - 参数配置跨标签页共享（sessionStorage → localStorage）
+- Sigmoid k=30 分数压缩过度，改为 k=5 恢复中低分段区分度
+- 检索去重按文件维度改为按 section 维度，同文件不同小节可共存
+- Token 截断增加英文句号和换行符边界
+- 断点恢复索引从全量扫描改为只读有 pending chunk 的文件
+- start.py 子进程输出改后台线程消费，防止 PIPE 死锁
+- 组件初始化失败静默吞错误改为打印具体原因
 
 ### CI & Docs
 
@@ -42,3 +48,6 @@
 - MIT License
 - 4 张产品截图
 - 5 个真实徽章（CI / Python / License / Last commit / Stars）
+- CHANGELOG.md 变更记录
+- .pre-commit-config.yaml 代码提交钩子
+- 删除死文件 config/config.schema.json
