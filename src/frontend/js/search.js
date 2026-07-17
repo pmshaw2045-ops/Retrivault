@@ -97,6 +97,7 @@ function startSearch(q) {
   var params = new URLSearchParams({
     q: q, top_k: p.top_k, mode: p.mode,
     threshold: p.similarity_threshold, temp: p.temperature,
+    rerank: p.rerank_enabled, rewrite: p.rewrite_enabled,
   });
   document.getElementById('search-results').innerHTML =
     '<div style="text-align:center;padding:48px 0;color:var(--text-tertiary);font-size:13px;">检索中…</div>';

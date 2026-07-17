@@ -4,13 +4,16 @@ async function startReindex() {
   var pre = document.getElementById('index-status-pre');
   var progress = document.getElementById('index-status-progress');
   var done = document.getElementById('index-status-done');
-  var footer = document.getElementById('index-footer');
   var okBtn = document.getElementById('btn-index-done');
+  var startBtn = document.getElementById('btn-start-index');
+  var cancelBtn = document.getElementById('btn-index-cancel');
 
   // 切换到进度视图
   pre.style.display = 'none';
   progress.style.display = 'block';
   done.style.display = 'none';
+  startBtn.style.display = 'none';
+  cancelBtn.style.display = 'none';
   okBtn.style.display = 'none';
 
   // 重置进度
@@ -19,16 +22,13 @@ async function startReindex() {
   setMsg('正在扫描文档…');
 
   try {
-    // 轮询进度：先 POST /api/index 触发，然后轮询 GET /api/index/progress
     var resp = await apiIndex('full');
 
-    // 如果服务端同步返回完成
     if (resp.status === 'ok' || resp.status === 'skipped') {
       showIndexDone(resp);
       return;
     }
 
-    // 否则轮询进度
     await pollIndexProgress();
   } catch(e) {
     setMsg('❌ 索引失败: ' + e.message);
@@ -37,7 +37,6 @@ async function startReindex() {
 }
 
 async function pollIndexProgress() {
-  // 最多轮询 5 分钟
   var maxPolls = 300;
   for (var i = 0; i < maxPolls; i++) {
     try {
@@ -59,7 +58,6 @@ async function pollIndexProgress() {
         ? '正在扫描第 ' + current + ' / ' + total + ' 个文档…'
         : '正在向量化第 ' + current + ' / ' + total + ' 个块…');
 
-      // 完成判断
       if (pr.status === 'ready' || pr.status === 'ok') {
         showIndexDone({doc_count: pr.doc_count, chunk_count: pr.chunk_count});
         return;
@@ -70,7 +68,6 @@ async function pollIndexProgress() {
         return;
       }
     } catch(e) {
-      // 轮询可能因为索引完成时端点返回不同格式，尝试重查状态
       try {
         var st = await apiStatus();
         if (st.state === 'ready') {
@@ -94,23 +91,27 @@ function setProgress(phase, current, total) {
 }
 
 function setMsg(text) {
-  var el = document.getElementById('index-status-msg');
+  var el = document.getElementById('progress-msg');
   if (el) el.textContent = text;
 }
 
 function showIndexDone(result) {
+  var pre = document.getElementById('index-status-pre');
   var progress = document.getElementById('index-status-progress');
   var done = document.getElementById('index-status-done');
   var okBtn = document.getElementById('btn-index-done');
+  var startBtn = document.getElementById('btn-start-index');
+  var cancelBtn = document.getElementById('btn-index-cancel');
 
+  pre.style.display = 'none';
   progress.style.display = 'none';
   done.style.display = 'block';
+  startBtn.style.display = 'none';
+  cancelBtn.style.display = 'inline-flex';
   okBtn.style.display = 'inline-flex';
 
-  document.getElementById('index-done-summary').innerHTML =
-    '文档: ' + (result.doc_count || 0) + ' | 块: ' + (result.chunk_count || 0);
-
-  // 覆盖 index-body 里的 close 逻辑：现在 overlay 点击可关闭
+  var msg = document.getElementById('index-done-msg');
+  if (msg) msg.textContent = '文档: ' + (result.doc_count || 0) + ' | 块: ' + (result.chunk_count || 0);
 }
 
 function sleep(ms) {

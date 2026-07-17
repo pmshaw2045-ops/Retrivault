@@ -61,7 +61,7 @@ def _should_rewrite(query: str) -> bool:
     return False
 
 
-async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: float):
+async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: float, rerank: bool = True, rewrite: bool = True):
     """生成搜索 pipeline 事件序列，每步携带完整详情"""
     comps = get_components()
     t0 = time.time()
@@ -74,7 +74,7 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
         "duration_ms": 0, "model": "", "system_prompt": "", "user_prompt": "",
     }
     t1 = time.time()
-    if comps.config.rewrite.enabled and _should_rewrite(q):
+    if rewrite and _should_rewrite(q):
         try:
             rewriter = _get_rewriter(comps.config)
             result = rewriter.rewrite(q)
@@ -148,7 +148,7 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
     t4 = time.time()
     reranked = False
     before_rerank = [(r.source_file.split("/")[-1], round(r.score, 3)) for r in results]
-    if comps.reranker:
+    if comps.reranker and rerank:
         try:
             docs = [r.content for r in results]
             reranked_data = comps.reranker.rerank(search_query, docs, top_n=len(docs))
@@ -250,9 +250,11 @@ async def search_stream(
     mode: str = Query("vector", pattern="^(vector|hybrid)$"),
     threshold: float = Query(0.0, ge=0.0, le=1.0),
     temp: float = Query(0.3, ge=0.0, le=2.0),
+    rerank: bool = Query(True),
+    rewrite: bool = Query(True),
 ):
     return StreamingResponse(
-        _search_events(q, top_k, mode, threshold, temp),
+        _search_events(q, top_k, mode, threshold, temp, rerank, rewrite),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

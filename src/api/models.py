@@ -13,6 +13,8 @@ class SearchRequest(BaseModel):
     temperature: float = Field(default=0.3, ge=0.0, le=2.0)
     similarity_threshold: float | None = Field(default=None, ge=0.0, le=1.0)
     tag_filter: list[str] | None = Field(default=None)
+    rerank_enabled: bool | None = Field(default=None)
+    rewrite_enabled: bool | None = Field(default=None)
 
 
 class SourceInfo(BaseModel):

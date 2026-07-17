@@ -47,10 +47,11 @@ async def search(req: SearchRequest):
     traces: list[dict] = []
     t0 = time.time()
 
-    # 0. Query 改写（3 路改写 + 查询扩展）
+    # rewrite 开关：UI 参数优先，否则用 config 默认值
+    rewrite_enabled = req.rewrite_enabled if req.rewrite_enabled is not None else comps.config.rewrite.enabled
     search_query = req.query
     t_qr = time.time()
-    if comps.config.rewrite.enabled and _should_rewrite(req.query):
+    if rewrite_enabled and _should_rewrite(req.query):
         try:
             rw = _get_rewriter(comps.config).rewrite(req.query)
             expanded = rw.get("expanded", req.query)
@@ -109,8 +110,10 @@ async def search(req: SearchRequest):
     t_rr = time.time()
     reranked = False
     reranked_data = None
+    # rerank 开关：UI 参数优先
+    rerank_enabled = req.rerank_enabled if req.rerank_enabled is not None else comps.config.search.rerank_enabled
     before_rerank = [(r.source_file.split("/")[-1], round(r.score, 3)) for r in results]
-    if comps.reranker:
+    if comps.reranker and rerank_enabled:
         try:
             docs = [r.content for r in results]
             reranked_data = comps.reranker.rerank(search_query, docs, top_n=len(docs))

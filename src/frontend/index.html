@@ -134,6 +134,20 @@
           <span class="range-val">.00</span>
         </div>
       </div>
+      <div class="config-row">
+        <label>Rerank</label>
+        <select id="cfg-rerank">
+          <option value="true">开</option>
+          <option value="false">关</option>
+        </select>
+      </div>
+      <div class="config-row">
+        <label>Rewrite</label>
+        <select id="cfg-rewrite">
+          <option value="true">开</option>
+          <option value="false">关</option>
+        </select>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('modal-params')">取消</button>
@@ -149,11 +163,10 @@
     <div class="modal-body" id="index-body">
       <div id="index-status-pre">
         <p style="color:var(--text-secondary);margin-bottom:12px;">从当前源文件重建全部索引，可能需要几分钟。</p>
-        <p style="color:var(--text-tertiary);font-size:12px;line-height:1.7;margin-bottom:16px;">
+        <p style="color:var(--text-tertiary);font-size:12px;line-height:1.7;margin-bottom:0;">
           ⚡ 日常不需要手动重建。增删改笔记后重启服务即自动增量更新。<br>
           仅在以下情况手动重建：改了分块参数（chunk_size）、索引状态异常、想清空重置。
         </p>
-        <button class="btn btn-primary" id="btn-start-index" onclick="startReindex()">开始重建</button>
       </div>
       <div id="index-status-progress" style="display:none;">
         <div class="progress-block">
@@ -170,17 +183,19 @@
           </div>
           <div class="progress-text" id="progress-embed-text">0 / 0</div>
         </div>
-        <div class="index-status-msg" id="index-status-msg">准备中…</div>
+        <div class="progress-msg" id="progress-msg"></div>
       </div>
       <div id="index-status-done" style="display:none;">
-        <div class="index-done-icon">✅</div>
-        <div class="index-done-summary" id="index-done-summary"></div>
+        <p id="index-done-msg" style="color:var(--text-secondary);"></p>
       </div>
     </div>
     <div class="modal-footer" id="index-footer">
       <span></span>
-      <button class="btn btn-primary" id="btn-index-done" style="display:none;" onclick="closeModal('modal-index')">OK</button>
+      <button class="btn" onclick="closeModal('modal-index')" id="btn-index-cancel" style="display:none;">取消</button>
+      <button class="btn btn-primary" id="btn-start-index" onclick="startReindex()">开始重建</button>
+      <button class="btn btn-primary" id="btn-index-done" style="display:none;" onclick="closeModal('modal-index')">完成</button>
     </div>
+  </div>
   </div>
 
   <script src="/static/js/api.js"></script>
@@ -200,18 +215,19 @@
       document.querySelectorAll('.settings-wrap').forEach(function(w) {
         var menu = w.querySelector('.dropdown-menu');
         if (w === sw) {
-          menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+          // 点击的是 dropdown-item（会触发 openModal），只关不切换
+          if (e.target.closest('.dropdown-item')) {
+            menu.style.display = 'none';
+          } else {
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+          }
         } else {
           menu.style.display = 'none';
         }
       });
     });
 
-    document.getElementById('modal-overlay').addEventListener('click', function() {
-      var idxBody = document.getElementById('index-body');
-      if (idxBody && idxBody.querySelector('#index-status-progress').style.display === 'block') return;
-      closeModal('modal-params');
-    });
+    // 阻止点击遮罩关闭弹窗（模态行为）
 
     function openModal(id) {
       document.querySelectorAll('.dropdown-menu').forEach(function(m) { m.style.display = 'none'; });
@@ -231,10 +247,14 @@
       var pre = document.getElementById('index-status-pre');
       var progress = document.getElementById('index-status-progress');
       var done = document.getElementById('index-status-done');
+      var startBtn = document.getElementById('btn-start-index');
+      var cancelBtn = document.getElementById('btn-index-cancel');
       var okBtn = document.getElementById('btn-index-done');
       if (pre) pre.style.display = 'block';
       if (progress) progress.style.display = 'none';
       if (done) done.style.display = 'none';
+      if (startBtn) { startBtn.style.display = 'inline-flex'; }
+      if (cancelBtn) { cancelBtn.style.display = 'inline-flex'; }
       if (okBtn) okBtn.style.display = 'none';
     }
 
@@ -259,14 +279,29 @@
         mode: document.getElementById('cfg-mode').value,
         temperature: parseFloat(document.getElementById('cfg-temp').value),
         similarity_threshold: parseFloat(document.getElementById('cfg-threshold').value),
+        rerank_enabled: document.getElementById('cfg-rerank').value === 'true',
+        rewrite_enabled: document.getElementById('cfg-rewrite').value === 'true',
       };
       sessionStorage.setItem('rag_params', JSON.stringify(p));
+    }
+
+    function loadCurrentParams() {
+      var p = getStoredParams();
+      document.getElementById('cfg-topk').value = p.top_k;
+      document.getElementById('cfg-topk').parentElement.querySelector('.range-val').textContent = p.top_k;
+      document.getElementById('cfg-mode').value = p.mode;
+      document.getElementById('cfg-temp').value = p.temperature;
+      document.getElementById('cfg-temp').parentElement.querySelector('.range-val').textContent = parseFloat(p.temperature).toFixed(2);
+      document.getElementById('cfg-threshold').value = p.similarity_threshold;
+      document.getElementById('cfg-threshold').parentElement.querySelector('.range-val').textContent = parseFloat(p.similarity_threshold).toFixed(2);
+      document.getElementById('cfg-rerank').value = String(p.rerank_enabled);
+      document.getElementById('cfg-rewrite').value = String(p.rewrite_enabled);
     }
 
     function getStoredParams() {
       var stored = sessionStorage.getItem('rag_params');
       if (stored) { try { return JSON.parse(stored); } catch(e) {} }
-      return { top_k: 5, mode: 'hybrid', temperature: 0.3, similarity_threshold: 0.1 };
+      return { top_k: 5, mode: 'hybrid', temperature: 0.3, similarity_threshold: 0.1, rerank_enabled: true, rewrite_enabled: true };
     }
   </script>
 
