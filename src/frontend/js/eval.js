@@ -81,9 +81,14 @@ function renderEvalResults(data) {
     var delta = d[item.key];
     var deltaHtml = '';
     if (delta !== null && delta !== undefined) {
-      var cls = delta > 0 ? 'eval-delta-up' : (delta < 0 ? 'eval-delta-down' : '');
-      var sign = delta > 0 ? '+' : '';
-      deltaHtml = '<div class="eval-delta ' + cls + '">' + sign + (delta * 100).toFixed(1) + '%</div>';
+      if (delta === 0) {
+        deltaHtml = '<div class="eval-delta" style="color:var(--text-tertiary);">持平</div>';
+      } else {
+        var cls = delta > 0 ? 'eval-delta-up' : 'eval-delta-down';
+        var sign = delta > 0 ? '+' : '';
+        var isPct = ['hit_rate','precision@5','recall@5'].indexOf(item.key) >= 0;
+        deltaHtml = '<div class="eval-delta ' + cls + '">' + sign + (isPct ? (delta * 100).toFixed(1) + '%' : delta.toFixed(2)) + '</div>';
+      }
     }
     return '<div class="eval-card">' +
       '<div class="eval-value">' + item.fmt(val) + '</div>' +
