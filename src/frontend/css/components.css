@@ -194,6 +194,7 @@
   text-transform: uppercase;
   letter-spacing: .5px;
   min-width: 80px;
+  text-align: right;
 }
 
 .config-range {

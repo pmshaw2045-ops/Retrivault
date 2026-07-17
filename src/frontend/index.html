@@ -35,7 +35,8 @@
     </header>
     <div id="home-search-area" class="search-area-center">
       <div class="search-box">
-        <input id="search-input" type="text" placeholder="搜索你的知识库…" autofocus>
+        <input id="search-input" type="text" placeholder="搜索你的知识库…" autofocus
+               onkeydown="if(event.key==='Enter')doSearch()">
         <button class="btn-search" onclick="doSearch()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -116,33 +117,33 @@
       <div class="config-row">
         <label>Mode</label>
         <select id="cfg-mode">
-          <option value="vector">vector</option>
-          <option value="hybrid">hybrid</option>
+          <option value="vector">向量</option>
+          <option value="hybrid">混合</option>
         </select>
       </div>
       <div class="config-row">
-        <label>Temperature</label>
+        <label>温度</label>
         <div class="config-range">
           <input type="range" id="cfg-temp" min="0" max="1" step=".05" value=".3">
-          <span class="range-val">.30</span>
+          <span class="range-val">0.30</span>
         </div>
       </div>
       <div class="config-row">
-        <label>Threshold</label>
+        <label>阈值</label>
         <div class="config-range">
           <input type="range" id="cfg-threshold" min="0" max="1" step=".05" value="0">
-          <span class="range-val">.00</span>
+          <span class="range-val">0.00</span>
         </div>
       </div>
       <div class="config-row">
-        <label>Rerank</label>
+        <label>重排序</label>
         <select id="cfg-rerank">
           <option value="true">开</option>
           <option value="false">关</option>
         </select>
       </div>
       <div class="config-row">
-        <label>Rewrite</label>
+        <label>改写</label>
         <select id="cfg-rewrite">
           <option value="true">开</option>
           <option value="false">关</option>
