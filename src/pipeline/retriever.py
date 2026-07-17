@@ -11,9 +11,13 @@ from src.interfaces import VectorStore
 
 
 def rescale_score(cosine_similarity: float) -> float:
-    """sigmoid 映射：raw cos_sim → [0,1] 用户友好分数"""
-    k = 30.0
-    midpoint = 0.1
+    """sigmoid 映射：raw cos_sim → [0,1] 用户友好分数
+
+    使用温和的 k=5 使中低分段仍有区分度。
+    k=30 时 raw_sim=0.2→0.95，大量结果挤在 0.95+，无法区分。
+    """
+    k = 5.0
+    midpoint = 0.3
     return 1.0 / (1.0 + math.exp(-k * (cosine_similarity - midpoint)))
 
 
@@ -110,9 +114,14 @@ class Retriever:
 
     @staticmethod
     def _dedup_by_source(results: list[SearchResult]) -> list[SearchResult]:
-        """同一 source_file 只保留最高分 chunk，避免重复文档占满 Top-K"""
-        seen: dict[str, SearchResult] = {}
+        """同一 source_file + heading_path 只保留最高分 chunk
+
+        不同 section（不同 heading_path）的 chunk 各自保留，
+        避免一篇文档中两个不相关的相关小节互相覆盖。
+        """
+        seen: dict[tuple[str, str], SearchResult] = {}
         for r in sorted(results, key=lambda x: x.score, reverse=True):
-            if r.source_file not in seen:
-                seen[r.source_file] = r
+            key = (r.source_file, r.heading_path)
+            if key not in seen:
+                seen[key] = r
         return sorted(seen.values(), key=lambda x: x.score, reverse=True)

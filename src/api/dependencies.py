@@ -173,6 +173,7 @@ def _init_reranker(config: AppConfig):
                            os.getenv("EMBEDDING_API_KEY",
                                      os.getenv("LLM_API_KEY", "")))
     if not rerank_key or rerank_key.startswith("sk-your-"):
+        print("⚠️  Reranker 跳过：未配置有效的 API Key")
         return None
     try:
         from src.pipeline.reranker import Reranker
@@ -181,13 +182,15 @@ def _init_reranker(config: AppConfig):
             base_url=config.rerank.base_url,
             model=config.rerank.model,
         )
-    except Exception:
+    except Exception as e:
+        print(f"⚠️  Reranker 初始化失败: {e}")
         return None
 
 
 def _init_generator(config: AppConfig) -> Generator | None:
     api_key = os.getenv("LLM_API_KEY", "")
     if not api_key or api_key.startswith("sk-your-"):
+        print("⚠️  Generator 跳过：未配置 LLM_API_KEY")
         return None
     try:
         from src.llm_providers.openai_compatible import OpenAICompatibleProvider
@@ -199,7 +202,9 @@ def _init_generator(config: AppConfig) -> Generator | None:
         elif provider == "ollama":
             llm = OpenAICompatibleProvider(api_key="ollama", base_url="http://localhost:11434/v1", model=config.llm.model)
         else:
+            print(f"⚠️  Generator 跳过：不支持的 Provider '{provider}'")
             return None
         return Generator(llm=llm)
-    except Exception:
+    except Exception as e:
+        print(f"⚠️  Generator 初始化失败: {e}")
         return None

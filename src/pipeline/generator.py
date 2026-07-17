@@ -222,19 +222,25 @@ class Generator:
 
     @staticmethod
     def _truncate_to_tokens(text: str, max_tokens: int) -> str:
-        """按 token 预算截断文本（保留完整句子）"""
-        # 粗略估算
+        """按 token 预算截断文本（保留完整句子）
+
+        支持中英文句边界：。！？.!?\n
+        """
         max_chars = max_tokens * 2
         if len(text) <= max_chars:
             return text
 
         truncated = text[:max_chars]
-        # 找到最后一个完整句子
+        # 找最后一个完整句子边界（中英文 + 换行）
         last_period = max(
             truncated.rfind("。"),
             truncated.rfind("！"),
             truncated.rfind("？"),
             truncated.rfind(". "),
+            truncated.rfind("! "),
+            truncated.rfind("? "),
+            truncated.rfind("\n\n"),
+            truncated.rfind("\n"),
         )
         if last_period > max_chars // 2:
             return truncated[:last_period + 1] + "…"

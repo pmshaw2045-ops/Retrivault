@@ -4,13 +4,14 @@
   scanner.scan() → parser.parse() → chunker.chunk() → embedder.embed() → vector_store.add()
 """
 import hashlib
+from collections import defaultdict
 from pathlib import Path
 
 from src.interfaces import EmbeddingProvider, VectorStore
 from src.pipeline.chunker import Chunker
 from src.pipeline.index_manager import IndexDecision, IndexManager
 from src.pipeline.obsidian_parser import ObsidianParser
-from src.pipeline.scanner import ObsidianScanner
+from src.pipeline.scanner import ObsidianScanner, ScannedDocument
 
 
 class Indexer:
@@ -117,20 +118,33 @@ class Indexer:
         return {"status": "ok", "doc_count": total_docs, "chunk_count": len(all_chunks)}
 
     def _resume_index(self, vault_path: str, progress_callback=None) -> dict:
-        """从断点恢复索引"""
+        """从断点恢复索引（只重新处理有 pending chunk 的文件）"""
         pending = self.index_manager.get_pending_chunks()
         if not pending:
             self.index_manager.mark_indexing_done(vault_path, 0, 0)
             return {"status": "ok", "doc_count": 0, "chunk_count": 0}
 
-        docs = self.scanner.scan(vault_path)
-        doc_map = {d.file_path: d for d in docs}
-
-        # 按源文件分组 pending chunks
-        from collections import defaultdict
+        # 只读取有 pending chunk 的源文件，避免全量扫描
         pending_by_file: dict[str, set] = defaultdict(set)
         for p in pending:
             pending_by_file[p["source_file"]].add(p["chunk_id"])
+
+        import yaml
+        docs = []
+        for abs_path in pending_by_file:
+            p = Path(abs_path)
+            if p.exists():
+                content = p.read_text(encoding="utf-8")
+                fm = yaml.safe_load(content.split("---", 2)[1]) if content.startswith("---") and "---" in content[3:] else None
+                docs.append(ScannedDocument(
+                    file_path=str(p),
+                    file_name=p.name,
+                    content=content,
+                    frontmatter=fm if isinstance(fm, dict) else None,
+                    file_mtime=p.stat().st_mtime,
+                ))
+
+        doc_map = {d.file_path: d for d in docs}
 
         all_chunks: list = []
         for source_file, pending_ids in pending_by_file.items():
@@ -139,7 +153,7 @@ class Indexer:
             doc = doc_map[source_file]
             parsed = self.parser.parse(doc.content, doc.file_path)
 
-            # ★ 每文件只分块一次
+            # 每文件只分块一次
             file_chunks = self.chunker.chunk(
                 parsed.content, source_file=source_file,
                 tags=parsed.tags, wikilinks=parsed.wikilinks,

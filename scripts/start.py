@@ -6,12 +6,22 @@
 或：
     make start
 """
+import logging
 import os
 import subprocess
 import sys
+import threading
 import time
 import webbrowser
 from pathlib import Path
+
+
+def _log_subprocess_output(stream, logger):
+    """在后台线程中持续消费子进程输出，防止 PIPE 满导致死锁"""
+    for line in iter(stream.readline, ""):
+        if line:
+            logger.info(line.rstrip())
+    stream.close()
 
 
 def wait_for_service(url: str, timeout: int = 30) -> bool:
@@ -29,6 +39,12 @@ def wait_for_service(url: str, timeout: int = 30) -> bool:
 
 
 def main():
+    logger = logging.getLogger("retrivault")
+    logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter("[%(asctime)s] %(message)s", datefmt="%H:%M:%S"))
+    logger.addHandler(handler)
+
     project_root = Path(__file__).resolve().parent.parent
     python = sys.executable
 
@@ -48,6 +64,9 @@ def main():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
+    # 后台线程消费输出，避免 PIPE 满死锁
+    t = threading.Thread(target=_log_subprocess_output, args=(api.stdout, logger), daemon=True)
+    t.start()
 
     if not wait_for_service("http://127.0.0.1:8000/api/health"):
         print("⚠️  API 启动超时，请检查日志。")
