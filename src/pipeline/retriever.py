@@ -64,11 +64,10 @@ def rescale_score(cosine_similarity: float) -> float:
 def display_score(internal_score: float) -> float:
     """将内部排序分数映射为用户友好的展示分数
 
-    内部分数范围约 [0.18, 0.75]（k=5, midpoint=0.3 时）。
-    sqrt 拉伸使中高段感觉更相关，同时保持排序不变。
-    例：0.58 → 0.76, 0.73 → 0.85, 0.18 → 0.42
+    内部分数范围约 [0.5, 1.0]（余弦距离修复后）。
+    直接透传 internal_score，不再做非线性映射。
     """
-    return round(internal_score ** 0.5, 3)
+    return round(internal_score, 3)
 
 
 @dataclass

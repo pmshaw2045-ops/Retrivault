@@ -137,7 +137,7 @@ class TestSourceInfo:
         assert len(response.sources) == 2
         assert response.sources[0]["source_file"] == "a.md"
         assert response.sources[0]["heading_path"] == "H1"
-        assert response.sources[0]["score"] == 0.975
+        assert response.sources[0]["score"] == 0.95
         assert "preview" in response.sources[0]
         assert response.sources[0]["index"] == 1
 
