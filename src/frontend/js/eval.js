@@ -1,6 +1,12 @@
 /* Eval Dashboard */
 var _isRunning = false;
 
+function _loadEvalParams() {
+  var stored = sessionStorage.getItem('rag_params');
+  if (stored) { try { return JSON.parse(stored); } catch(e) {} }
+  return { top_k: 5, mode: 'hybrid', temperature: 0.3, similarity_threshold: 0.1, rerank_enabled: true, rewrite_enabled: true };
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   loadLastEval();
 });
@@ -31,7 +37,8 @@ async function runEval() {
   result.style.display = 'none';
 
   try {
-    var data = await apiEval('hybrid', 5, 0.1);
+    var p = _loadEvalParams();
+    var data = await apiEval(p.mode, p.top_k, p.similarity_threshold);
     await sleep(500);
     var last = await apiEvalLast();
     if (last && last.has_data) {
