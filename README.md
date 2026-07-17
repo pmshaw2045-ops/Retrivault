@@ -1,8 +1,3 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/xiaoleishaw/retrivault/main/assets/banner-dark.png">
-  <img alt="Retrivault" src="https://raw.githubusercontent.com/xiaoleishaw/retrivault/main/assets/banner-light.png">
-</picture>
-
 # Retrivault
 
 > **Obsidian-first RAG system** — Point it at your vault, search in natural language, get answers with citations.
@@ -36,15 +31,19 @@
 git clone https://github.com/xiaoleishaw/retrivault.git
 cd retrivault
 
-# 2. Install
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-# 3. Configure (edit this single file)
-cp .env.example .env
-# Edit .env — at minimum set your LLM API key:
-#   LLM_API_KEY=sk-your-key
-#   OBSIDIAN_VAULT_PATH=~/your-obsidian-vault
+|# 2. Install
+|python3 -m venv .venv && source .venv/bin/activate
+|pip install -r requirements.txt
+|pip install -e ".[dev]"  # for dev tools (pytest, ruff, mypy)
+|
+|# 3. Configure — two API keys
+|cp .env.example .env
+|# Edit .env: set your keys
+|#   LLM_API_KEY=sk-xxx           # DeepSeek for generation + rewrite
+|#   EMBEDDING_API_KEY=sk-xxx     # SiliconFlow for embedding (https://cloud.siliconflow.cn)
+|#
+|# No vault? No problem — it uses docs/samples/ automatically.
+|# Want local embedding? Set EMBEDDING_PROVIDER=local and uncomment deps.
 
 # 4. Launch
 make start
@@ -165,7 +164,7 @@ tests/
 Obsidian search is keyword-based (BM25). Retrivault gives you **semantic search** — it understands intent, not just exact words. Ask "what's the best vector DB for my use case" and it finds the right doc even if no doc says exactly that.
 
 **Do I need an API key?**  
-For LLM generation, yes (DeepSeek / OpenAI). For embedding, you can use the local BGE-M3 model for free (requires ~2.2GB download), or the API-based embedder with a SiliconFlow key.
+Two keys by default: a [DeepSeek](https://platform.deepseek.com/api_keys) key for LLM generation + rewriting, and a [SiliconFlow](https://cloud.siliconflow.cn) key for embedding (BGE-M3). For a fully free setup, use local embedding (`EMBEDDING_PROVIDER=local`, requires ~2.2GB download) paired with Ollama.
 
 **Is my data sent to third parties?**  
 Only what you configure. With local embedding + Ollama LLM, everything stays on your machine.
