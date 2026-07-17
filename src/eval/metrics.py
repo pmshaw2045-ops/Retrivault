@@ -28,33 +28,40 @@ def mrr(retrieved_docs: list[str], relevant_docs: list[str], k: int | None = Non
 
 
 def recall_at_k(retrieved_docs: list[str], relevant_docs: list[str], k: int = 5) -> float:
-    """Recall@k — 前 k 个结果中命中了多少相关文档"""
+    """Recall@k — 前 k 个结果中覆盖了多少相关文档（文件级去重）"""
     if not relevant_docs:
         return 0.0
     top_k = retrieved_docs[:k]
-    hits = sum(1 for d in top_k if d in relevant_docs)
+    # 同文件多 chunk 只算一次命中
+    hits = len({d for d in top_k if d in relevant_docs})
     return hits / len(relevant_docs)
 
 
 def precision_at_k(retrieved_docs: list[str], relevant_docs: list[str], k: int = 5) -> float:
-    """Precision@k — 前 k 个结果中相关文档的比例"""
+    """Precision@k — 前 k 个结果中相关文档的比例（文件级去重）"""
     if not relevant_docs:
         return 0.0
     top_k = retrieved_docs[:k]
-    hits = sum(1 for d in top_k if d in relevant_docs)
+    hits = len({d for d in top_k if d in relevant_docs})
     return hits / k if k > 0 else 0.0
 
 
 def ndcg_at_k(retrieved_docs: list[str], relevant_docs: list[str], k: int = 5) -> float:
-    """NDCG@k — 归一化折损累积增益"""
+    """NDCG@k — 归一化折损累积增益（文件级去重）"""
     if not relevant_docs:
         return 0.0
 
     top_k = retrieved_docs[:k]
+
+    # DCG: 同文件多 chunk 只算第一次命中的位置
     dcg = 0.0
-    for i, doc in enumerate(top_k):
-        if doc in relevant_docs:
-            dcg += 1.0 / math.log2(i + 2)  # i+2 because log2(1)=0
+    seen = set()
+    pos = 2  # log2(2) = 1
+    for doc in top_k:
+        if doc in relevant_docs and doc not in seen:
+            dcg += 1.0 / math.log2(pos)
+            seen.add(doc)
+        pos += 1
 
     # IDCG: 理想排序（所有相关文档排在最前面）
     idcg = 0.0

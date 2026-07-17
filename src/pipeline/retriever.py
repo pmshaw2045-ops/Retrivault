@@ -94,7 +94,7 @@ class Retriever:
             distance = r.get("_distance", 1.0)
             raw_sim = max(0.0, 1.0 - distance)
             score = rescale_score(raw_sim)
-            if score < threshold:
+            if display_score(score) < threshold:
                 continue
 
             chunk_tags = r.get("tags", [])
