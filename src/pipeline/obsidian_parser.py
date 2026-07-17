@@ -80,6 +80,8 @@ class ObsidianParser:
         r"((?:>\s*[^\n]*\n?)+)"               # callout 内容（连续 > 行）
     )
 
+    IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".bmp", ".webp", ".ico"}
+
     def parse(self, content: str, file_path: str = "unknown.md") -> ParsedDocument:
         """
         解析 .md 内容，提取所有 Obsidian 特有语法要素。
@@ -92,16 +94,24 @@ class ObsidianParser:
             ParsedDocument 实例
         """
         file_name = file_path.split("/")[-1]
+        embeds = self._extract_embeds(content)
+        wikilinks = self._extract_wikilinks(content)
+        tags = self._extract_tags(content)
+
+        # 将图像嵌入的文件名注入正文（提升图片文件名可搜索性）
+        image_refs = self._extract_image_refs(embeds)
+        if image_refs:
+            content = content + "\n\n" + " ".join(f"[图片: {ref}]" for ref in image_refs)
 
         return ParsedDocument(
             file_path=file_path,
             file_name=file_name,
             content=content,
             frontmatter=self._extract_frontmatter(content),
-            wikilinks=self._extract_wikilinks(content),
-            tags=self._extract_tags(content),
+            wikilinks=wikilinks,
+            tags=tags,
             callouts=self._extract_callouts(content),
-            embeds=self._extract_embeds(content),
+            embeds=embeds,
             dataview_blocks=self._count_dataview_blocks(content),
         )
 
@@ -197,6 +207,28 @@ class ObsidianParser:
                 emb["heading"] = match.group(2).strip()
             embeds.append(emb)
         return embeds
+
+    @staticmethod
+    def _extract_image_refs(embeds: list[dict]) -> list[str]:
+        """从 embeds 中提取图片引用（去除扩展名，保留文件名）
+
+        如 ![[架构图.png]] → "架构图"
+        """
+        refs: list[str] = []
+        seen: set[str] = set()
+        for emb in embeds:
+            target = emb.get("target", "")
+            # 检查是否是已知图片扩展名
+            dot = target.rfind(".")
+            if dot == -1:
+                continue
+            ext = target[dot:].lower()
+            if ext in ObsidianParser.IMAGE_EXTENSIONS:
+                name = target[:dot]
+                if name and name not in seen:
+                    seen.add(name)
+                    refs.append(name)
+        return refs
 
     # ---------- Dataview ----------
 
