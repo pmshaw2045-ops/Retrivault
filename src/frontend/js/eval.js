@@ -67,6 +67,8 @@ function renderEvalResults(data) {
   empty.style.display = 'none';
   result.style.display = 'block';
 
+  var topK = data.top_k || 5;
+
   // 评测时间
   if (data.run_at) lastTime.textContent = '上次: ' + data.run_at;
 
@@ -80,9 +82,9 @@ function renderEvalResults(data) {
   metrics.innerHTML = [
     { key: 'hit_rate', label: 'Hit Rate', fmt: function(v) { return (v * 100).toFixed(0) + '%'; } },
     { key: 'mrr', label: 'MRR', fmt: function(v) { return v.toFixed(2); } },
-    { key: 'precision@5', label: 'Precision@5', fmt: function(v) { return (v * 100).toFixed(0) + '%'; } },
-    { key: 'recall@5', label: 'Recall@5', fmt: function(v) { return (v * 100).toFixed(0) + '%'; } },
-    { key: 'ndcg@5', label: 'NDCG@5', fmt: function(v) { return v.toFixed(2); } },
+    { key: 'precision', label: 'Precision@' + topK, fmt: function(v) { return (v * 100).toFixed(0) + '%'; } },
+    { key: 'recall', label: 'Recall@' + topK, fmt: function(v) { return (v * 100).toFixed(0) + '%'; } },
+    { key: 'ndcg', label: 'NDCG@' + topK, fmt: function(v) { return v.toFixed(2); } },
   ].map(function(item) {
     var val = (m[item.key] || 0);
     var delta = d[item.key];
@@ -93,7 +95,7 @@ function renderEvalResults(data) {
       } else {
         var cls = delta > 0 ? 'eval-delta-up' : 'eval-delta-down';
         var sign = delta > 0 ? '+' : '';
-        var isPct = ['hit_rate','precision@5','recall@5'].indexOf(item.key) >= 0;
+        var isPct = ['hit_rate','precision','recall'].indexOf(item.key) >= 0;
         deltaHtml = '<div class="eval-delta ' + cls + '">' + sign + (isPct ? (delta * 100).toFixed(1) + '%' : delta.toFixed(2)) + '</div>';
       }
     }
@@ -104,7 +106,7 @@ function renderEvalResults(data) {
       '</div>';
   }).join('');
 
-  // Bad case 聚合
+  // Bad case
   var details = data.details || [];
   var misses = details.filter(function(d) { return !d.hit; });
   var lowMrr = details.filter(function(d) { return d.hit && d.mrr < 0.5; });
@@ -122,7 +124,15 @@ function renderEvalResults(data) {
     badcase.style.display = 'none';
   }
 
-  // Detail table
+  // Detail table - 表头带 @K
+  var headers = document.querySelectorAll('#eval-table thead th');
+  if (headers.length >= 6) {
+    headers[2].textContent = 'MRR';
+    headers[3].textContent = 'P@' + topK;
+    headers[4].textContent = 'R@' + topK;
+    headers[5].textContent = 'NDCG@' + topK;
+  }
+
   tableBody.innerHTML = details.map(function(d) {
     var hitClass = d.hit ? 'eval-hit' : 'eval-miss';
     var hitIcon = d.hit ? '✓' : '✗';
@@ -130,9 +140,9 @@ function renderEvalResults(data) {
       '<td>' + esc(d.query) + '</td>' +
       '<td style="text-align:center;"><span class="' + hitClass + '">' + hitIcon + '</span></td>' +
       '<td style="text-align:center;font-family:var(--font-mono);">' + (d.mrr || 0).toFixed(2) + '</td>' +
-      '<td style="text-align:center;font-family:var(--font-mono);">' + ((d['precision@5'] || 0) * 100).toFixed(0) + '%</td>' +
-      '<td style="text-align:center;font-family:var(--font-mono);">' + ((d['recall@5'] || 0) * 100).toFixed(0) + '%</td>' +
-      '<td style="text-align:center;font-family:var(--font-mono);">' + (d['ndcg@5'] || 0).toFixed(2) + '</td>' +
+      '<td style="text-align:center;font-family:var(--font-mono);">' + ((d.precision || 0) * 100).toFixed(0) + '%</td>' +
+      '<td style="text-align:center;font-family:var(--font-mono);">' + ((d.recall || 0) * 100).toFixed(0) + '%</td>' +
+      '<td style="text-align:center;font-family:var(--font-mono);">' + (d.ndcg || 0).toFixed(2) + '</td>' +
       '<td style="text-align:center;font-family:var(--font-mono);color:var(--text-tertiary);">' + (d.latency_ms || 0).toFixed(0) + 'ms</td>' +
       '</tr>';
   }).join('');

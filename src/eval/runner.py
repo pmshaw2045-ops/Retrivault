@@ -23,9 +23,10 @@ class EvalResult:
     query: str
     hit: float
     mrr: float
-    recall_5: float
-    precision_5: float
-    ndcg_5: float
+    recall: float
+    precision: float
+    ndcg: float
+    top_k: int
     latency_ms: float
     chunks_found: int
     retrieved_docs: list[str] = field(default_factory=list)
@@ -36,12 +37,13 @@ class EvalReport:
     """完整评测报告"""
     config_name: str
     total_queries: int
+    top_k: int
     results: list[EvalResult]
     avg_hit_rate: float = 0.0
     avg_mrr: float = 0.0
-    avg_recall_5: float = 0.0
-    avg_precision_5: float = 0.0
-    avg_ndcg_5: float = 0.0
+    avg_recall: float = 0.0
+    avg_precision: float = 0.0
+    avg_ndcg: float = 0.0
     avg_latency_ms: float = 0.0
 
 
@@ -78,12 +80,13 @@ class EvalRunner:
         report = EvalReport(
             config_name=config_name or f"{mode}-k{top_k}-t{similarity_threshold}",
             total_queries=n,
+            top_k=top_k,
             results=results,
             avg_hit_rate=sum(r.hit for r in results) / n if n else 0,
             avg_mrr=sum(r.mrr for r in results) / n if n else 0,
-            avg_recall_5=sum(r.recall_5 for r in results) / n if n else 0,
-            avg_precision_5=sum(r.precision_5 for r in results) / n if n else 0,
-            avg_ndcg_5=sum(r.ndcg_5 for r in results) / n if n else 0,
+            avg_recall=sum(r.recall for r in results) / n if n else 0,
+            avg_precision=sum(r.precision for r in results) / n if n else 0,
+            avg_ndcg=sum(r.ndcg for r in results) / n if n else 0,
             avg_latency_ms=sum(r.latency_ms for r in results) / n if n else 0,
         )
         EvalRunner._save_last(report, config={"mode": mode, "top_k": top_k, "threshold": similarity_threshold})
@@ -129,9 +132,10 @@ class EvalRunner:
             query=gq.query,
             hit=hit_rate(retrieved_docs, list(relevant_docs)),
             mrr=mrr(retrieved_docs, list(relevant_docs)),
-            recall_5=recall_at_k(retrieved_docs, list(relevant_docs), k=5),
-            precision_5=precision_at_k(retrieved_docs, list(relevant_docs), k=5),
-            ndcg_5=ndcg_at_k(retrieved_docs, list(relevant_docs), k=5),
+            recall=recall_at_k(retrieved_docs, list(relevant_docs), k=top_k),
+            precision=precision_at_k(retrieved_docs, list(relevant_docs), k=top_k),
+            ndcg=ndcg_at_k(retrieved_docs, list(relevant_docs), k=top_k),
+            top_k=top_k,
             latency_ms=latency,
             chunks_found=len(retrieved_docs),
             retrieved_docs=retrieved_docs,
@@ -166,29 +170,31 @@ class EvalRunner:
             "run_at": cls._last_run_at,
             "config": cls._last_config,
             "total_queries": r.total_queries,
+            "top_k": r.top_k,
             "metrics": {
                 "hit_rate": round(r.avg_hit_rate, 4),
                 "mrr": round(r.avg_mrr, 4),
-                "precision@5": round(r.avg_precision_5, 4),
-                "recall@5": round(r.avg_recall_5, 4),
-                "ndcg@5": round(r.avg_ndcg_5, 4),
+                "precision": round(r.avg_precision, 4),
+                "recall": round(r.avg_recall, 4),
+                "ndcg": round(r.avg_ndcg, 4),
                 "avg_latency_ms": round(r.avg_latency_ms, 1),
             },
             "deltas": {
                 "hit_rate": _delta(r.avg_hit_rate, "avg_hit_rate"),
                 "mrr": _delta(r.avg_mrr, "avg_mrr"),
-                "precision@5": _delta(r.avg_precision_5, "avg_precision_5"),
-                "recall@5": _delta(r.avg_recall_5, "avg_recall_5"),
-                "ndcg@5": _delta(r.avg_ndcg_5, "avg_ndcg_5"),
+                "precision": _delta(r.avg_precision, "avg_precision"),
+                "recall": _delta(r.avg_recall, "avg_recall"),
+                "ndcg": _delta(r.avg_ndcg, "avg_ndcg"),
             },
             "details": [
                 {
                     "query": er.query,
                     "hit": er.hit,
                     "mrr": round(er.mrr, 4),
-                    "recall@5": round(er.recall_5, 4),
-                    "precision@5": round(er.precision_5, 4),
-                    "ndcg@5": round(er.ndcg_5, 4),
+                    "recall": round(er.recall, 4),
+                    "precision": round(er.precision, 4),
+                    "ndcg": round(er.ndcg, 4),
+                    "top_k": er.top_k,
                     "latency_ms": round(er.latency_ms, 1),
                     "retrieved": er.retrieved_docs[:5],
                 }
