@@ -133,32 +133,36 @@ class LanceVectorStore(VectorStore):
         self, query_vector: list[float], top_k: int = 5
     ) -> list[dict]:
         """
-        向量搜索。
+        向量搜索（余弦距离）。
 
         返回 top_k 个最相似的 chunk，包含 content + metadata + _distance。
         """
         self._ensure_table()
-        results = self._table.search(query_vector).limit(top_k).to_list()
+        results = (
+            self._table
+            .search(query_vector)
+            .metric("cosine")
+            .limit(top_k)
+            .to_list()
+        )
         return self._format_results(results)
 
     def search_hybrid(
         self, query_vector: list[float], query_text: str, top_k: int = 5
     ) -> list[dict]:
-        """混合搜索：向量 + FTS 文本匹配"""
+        """混合搜索：向量（余弦距离）+ FTS 文本匹配
+
+        LanceDB 的 FTS 自动做 BM25 融合，_distance 是余弦距离。
+        关键词加分策略由 retriever.Retriever._keyword_boost() 处理。
+        """
         self._ensure_table()
         results = (
             self._table
             .search(query_vector, fts_columns=["content"])
+            .metric("cosine")
             .limit(top_k * 3)
             .to_list()
         )
-        query_terms = set(query_text.lower().split())
-        for r in results:
-            content_lower = r.get("content", "").lower()
-            hits = sum(1 for t in query_terms if t in content_lower)
-            if hits > 0:
-                r["_distance"] = max(0.01, r.get("_distance", 1.0) - hits * 0.05)
-        results.sort(key=lambda r: r.get("_distance", 1.0))
         return self._format_results(results[:top_k])
 
     def clear(self) -> None:

@@ -2,12 +2,52 @@
 
 Phase 1: LanceDB 向量搜索
 Phase 2: LanceDB 混合搜索（向量 + FTS）+ 结果去重
+
+关键词加分（_keyword_boost）：
+  - 使用 jieba 中文分词，支持英/中/混合查询
+  - 在 raw_sim 层加分（before rescale_score），不入侵 LanceDB 存储层
+  - 每个有意义的查询词命中 +0.10 raw_sim，上限 +0.20
 """
 import asyncio
 import math
 from dataclasses import dataclass, field
 
 from src.interfaces import VectorStore
+
+# ── jieba 分词器（惰性加载，首次使用时初始化） ──
+_JIEBA_REF = None  # 模块级引用，避免局部作用域问题
+
+
+def _tokenize(text: str) -> list[str]:
+    """对查询文本做中文分词，返回有意义的关键词列表。
+
+    对纯英文/数字/符号查询 fallback 到 str.split()。
+    过滤单字、停用词后的词才用于关键词加分。
+    """
+    global _JIEBA_REF
+    if not text.strip():
+        return []
+
+    # 检测是否有中文：有中文用 jieba，否则 .split()
+    has_chinese = any("\u4e00" <= c <= "\u9fff" for c in text)
+    if has_chinese:
+        if _JIEBA_REF is None:
+            import jieba
+            _JIEBA_REF = jieba
+        tokens = _JIEBA_REF.lcut(text)
+    else:
+        tokens = text.lower().split()
+
+    return [t.lower() for t in tokens if len(t) >= 2]
+
+
+def _keyword_boost(content: str, tokens: list[str]) -> float:
+    """计算关键词加分：每个 token 在 content 中出现一次 +0.10，上限 +0.20。"""
+    if not tokens:
+        return 0.0
+    content_lower = content.lower()
+    hits = sum(1 for t in tokens if t in content_lower)
+    return min(0.20, hits * 0.10)
 
 
 def rescale_score(cosine_similarity: float) -> float:
@@ -67,7 +107,7 @@ class Retriever:
         else:
             raw = self.store.search(query_vector, top_k=fetch_k)
 
-        results = self._build_results(raw, threshold, tag_filter)
+        results = self._build_results(raw, threshold, tag_filter, query_text=query_text)
 
         # 去重：同一 source_file 只保留最高分的 chunk
         results = self._dedup_by_source(results)
@@ -88,11 +128,19 @@ class Retriever:
     # ── 内部方法 ──
 
     def _build_results(self, raw: list[dict], threshold: float,
-                       tag_filter: list[str] | None) -> list[SearchResult]:
+                       tag_filter: list[str] | None,
+                       query_text: str = "") -> list[SearchResult]:
+        query_tokens = _tokenize(query_text) if query_text else []
         results = []
         for r in raw:
             distance = r.get("_distance", 1.0)
             raw_sim = max(0.0, 1.0 - distance)
+
+            # 关键词加分（raw_sim 层，before rescale）
+            if query_tokens:
+                content = r.get("content", "")
+                raw_sim = min(1.0, raw_sim + _keyword_boost(content, query_tokens))
+
             score = rescale_score(raw_sim)
             if display_score(score) < threshold:
                 continue
