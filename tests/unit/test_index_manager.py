@@ -1,4 +1,5 @@
 """测试 IndexManager — 启动决策、状态管理、变更检测、模型版本检测"""
+
 import sqlite3
 from pathlib import Path
 
@@ -74,7 +75,7 @@ class TestStartupDecisions:
         # 模拟已完成索引
         manager.db.execute(
             "INSERT INTO index_state (vault_path, status, doc_count) VALUES (?, 'ready', 2)",
-            (str(temp_vault),)
+            (str(temp_vault),),
         )
         manager.db.commit()
 
@@ -88,7 +89,7 @@ class TestStartupDecisions:
         """上次状态 indexing → RESUME"""
         manager.db.execute(
             "INSERT INTO index_state (vault_path, status) VALUES (?, 'indexing')",
-            (str(temp_vault),)
+            (str(temp_vault),),
         )
         manager.db.commit()
 
@@ -99,8 +100,7 @@ class TestStartupDecisions:
         """embedding 模型变更 → REINDEX"""
         # 已完成索引，但使用了不同的 embedding 模型
         manager.db.execute(
-            "INSERT INTO index_state (vault_path, status) VALUES (?, 'ready')",
-            (str(temp_vault),)
+            "INSERT INTO index_state (vault_path, status) VALUES (?, 'ready')", (str(temp_vault),)
         )
         manager.db.execute(
             "INSERT INTO chunk_progress (chunk_id, source_file, chunk_index, content_hash, embedding_model, status) "
@@ -114,8 +114,7 @@ class TestStartupDecisions:
     def test_incremental_when_files_changed(self, manager, temp_vault):
         """文件变更 → INCREMENTAL"""
         manager.db.execute(
-            "INSERT INTO index_state (vault_path, status) VALUES (?, 'ready')",
-            (str(temp_vault),)
+            "INSERT INTO index_state (vault_path, status) VALUES (?, 'ready')", (str(temp_vault),)
         )
         # 不标记文件为已索引 — 变更检测会发现差异
         manager.db.commit()
@@ -179,7 +178,9 @@ class TestChunkProgress:
     def test_embedding_model_recorded(self, manager):
         """chunk_progress 记录 embedding_model"""
         manager.mark_chunk_pending("c1", "doc.md", 0, "h1")
-        row = manager.db.execute("SELECT embedding_model FROM chunk_progress WHERE chunk_id='c1'").fetchone()
+        row = manager.db.execute(
+            "SELECT embedding_model FROM chunk_progress WHERE chunk_id='c1'"
+        ).fetchone()
         assert row["embedding_model"] == "BAAI/bge-m3"
 
 
@@ -266,6 +267,7 @@ class TestReset:
 # ============================================================
 # Helpers
 # ============================================================
+
 
 def _mark_all_indexed(manager: IndexManager, vault: Path, model: str):
     """辅助：标记 vault 中所有文件为已索引"""

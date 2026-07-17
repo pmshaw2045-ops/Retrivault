@@ -1,4 +1,5 @@
 """POST /api/search — 检索 + LLM 生成"""
+
 import logging
 import os
 import time
@@ -32,9 +33,22 @@ def _should_rewrite(query: str) -> bool:
     q = query.strip()
     if len(q) <= 3:
         return False
-    conversational = {"帮我", "请问", "有没有", "怎么", "如何",
-                      "什么", "哪个", "哪些", "为什么", "给", "一下",
-                      "能不能", "是不是", "可否"}
+    conversational = {
+        "帮我",
+        "请问",
+        "有没有",
+        "怎么",
+        "如何",
+        "什么",
+        "哪个",
+        "哪些",
+        "为什么",
+        "给",
+        "一下",
+        "能不能",
+        "是不是",
+        "可否",
+    }
     if any(w in q for w in conversational):
         return True
     if len(q) > 15:
@@ -49,7 +63,9 @@ async def search(req: SearchRequest):
     t0 = time.time()
 
     # rewrite 开关：UI 参数优先，否则用 config 默认值
-    rewrite_enabled = req.rewrite_enabled if req.rewrite_enabled is not None else comps.config.rewrite.enabled
+    rewrite_enabled = (
+        req.rewrite_enabled if req.rewrite_enabled is not None else comps.config.rewrite.enabled
+    )
     search_query = req.query
     t_qr = time.time()
     if rewrite_enabled and _should_rewrite(req.query):
@@ -60,19 +76,35 @@ async def search(req: SearchRequest):
                 search_query = expanded
             rw["duration_ms"] = (time.time() - t_qr) * 1000
         except Exception:
-            rw = {"rewrites": [], "expanded": req.query, "model": "",
-                  "system_prompt": "", "user_prompt": ""}
+            rw = {
+                "rewrites": [],
+                "expanded": req.query,
+                "model": "",
+                "system_prompt": "",
+                "user_prompt": "",
+            }
             pass
     else:
-        rw = {"rewrites": [], "expanded": req.query, "model": "",
-              "system_prompt": "", "user_prompt": ""}
-    traces.append(_trace("rewrite", input=req.query, output=search_query,
-                         rewrites=rw.get("rewrites", []),
-                         duration_ms=(time.time() - t_qr) * 1000,
-                         skipped=search_query == req.query,
-                         model=rw.get("model", ""),
-                         system_prompt=rw.get("system_prompt", ""),
-                         user_prompt=rw.get("user_prompt", "")))
+        rw = {
+            "rewrites": [],
+            "expanded": req.query,
+            "model": "",
+            "system_prompt": "",
+            "user_prompt": "",
+        }
+    traces.append(
+        _trace(
+            "rewrite",
+            input=req.query,
+            output=search_query,
+            rewrites=rw.get("rewrites", []),
+            duration_ms=(time.time() - t_qr) * 1000,
+            skipped=search_query == req.query,
+            model=rw.get("model", ""),
+            system_prompt=rw.get("system_prompt", ""),
+            user_prompt=rw.get("user_prompt", ""),
+        )
+    )
 
     # 1. Embedding
     t_emb = time.time()
@@ -80,29 +112,37 @@ async def search(req: SearchRequest):
         query_vector = comps.embedder.embed_query(search_query)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Embedding failed: {e}") from e
-    traces.append(_trace("embed", dims=len(query_vector),
-                         duration_ms=(time.time() - t_emb) * 1000))
+    traces.append(_trace("embed", dims=len(query_vector), duration_ms=(time.time() - t_emb) * 1000))
 
     # 2. 检索
     t_ret = time.time()
     results = await comps.retriever.search_async(
-        query_vector, query_text=req.query,
-        top_k=req.top_k, similarity_threshold=req.similarity_threshold,
-        tag_filter=req.tag_filter, mode=req.mode,
+        query_vector,
+        query_text=req.query,
+        top_k=req.top_k,
+        similarity_threshold=req.similarity_threshold,
+        tag_filter=req.tag_filter,
+        mode=req.mode,
     )
     # 细粒度：记录每个 chunk 的内容片段和分数
-    ret_details = [{"preview": r.content[:80].replace("\n", " "),
-                    "score": round(r.score, 3)}
-                   for r in results]
-    traces.append(_trace("retrieve", mode=req.mode,
-                         chunks_found=len(results),
-                         duration_ms=(time.time() - t_ret) * 1000,
-                         results=ret_details))
+    ret_details = [
+        {"preview": r.content[:80].replace("\n", " "), "score": round(r.score, 3)} for r in results
+    ]
+    traces.append(
+        _trace(
+            "retrieve",
+            mode=req.mode,
+            chunks_found=len(results),
+            duration_ms=(time.time() - t_ret) * 1000,
+            results=ret_details,
+        )
+    )
 
     if not results:
         traces.append(_trace("total", duration_ms=(time.time() - t0) * 1000))
         return SearchResponse(
-            answer="我的知识库中没有相关信息。", sources=[],
+            answer="我的知识库中没有相关信息。",
+            sources=[],
             retrieval_stats={"chunks_found": 0, "chunks_used": 0, "tokens_used": 0},
             trace=traces,
         )
@@ -112,7 +152,9 @@ async def search(req: SearchRequest):
     reranked = False
     reranked_data = None
     # rerank 开关：UI 参数优先
-    rerank_enabled = req.rerank_enabled if req.rerank_enabled is not None else comps.config.search.rerank_enabled
+    rerank_enabled = (
+        req.rerank_enabled if req.rerank_enabled is not None else comps.config.search.rerank_enabled
+    )
     before_rerank = [(r.source_file.split("/")[-1], round(r.score, 3)) for r in results]
     if comps.reranker and rerank_enabled:
         try:
@@ -132,31 +174,45 @@ async def search(req: SearchRequest):
     after_rerank = [(r.source_file.split("/")[-1], round(r.score, 3)) for r in results]
     # 记录 rerank 输入（每条文档的前100字符片段）
     if reranked_data:
-        rerank_inputs = [r.content[:100].replace("\n", " ") for r in
-                         [results[item["index"]] for item in reranked_data]]
+        rerank_inputs = [
+            r.content[:100].replace("\n", " ")
+            for r in [results[item["index"]] for item in reranked_data]
+        ]
     else:
         rerank_inputs = [r.content[:100].replace("\n", " ") for r in results]
-    traces.append(_trace("rerank", applied=reranked,
-                         duration_ms=(time.time() - t_rr) * 1000,
-                         model=comps.config.rerank.model,
-                         query=search_query,
-                         input_count=len(rerank_inputs),
-                         input_docs=rerank_inputs[:5],
-                         before=before_rerank, after=after_rerank))
+    traces.append(
+        _trace(
+            "rerank",
+            applied=reranked,
+            duration_ms=(time.time() - t_rr) * 1000,
+            model=comps.config.rerank.model,
+            query=search_query,
+            input_count=len(rerank_inputs),
+            input_docs=rerank_inputs[:5],
+            before=before_rerank,
+            after=after_rerank,
+        )
+    )
 
     # 3. LLM 生成
     t_llm = time.time()
     if comps.generator:
         try:
             resp = comps.generator.generate(
-                query=req.query, results=results, temperature=req.temperature,
+                query=req.query,
+                results=results,
+                temperature=req.temperature,
             )
-            traces.append(_trace("generate",
-                                 model=comps.config.llm.model,
-                                 tokens_used=resp.retrieval_stats.get("tokens_used", 0),
-                                 system_prompt=resp.prompt_text[:500] if hasattr(resp, 'prompt_text') else "",
-                                 user_prompt_chunks=f"{len(results)} chunks → {len(list(resp.sources))} used",
-                                 duration_ms=(time.time() - t_llm) * 1000))
+            traces.append(
+                _trace(
+                    "generate",
+                    model=comps.config.llm.model,
+                    tokens_used=resp.retrieval_stats.get("tokens_used", 0),
+                    system_prompt=resp.prompt_text[:500] if hasattr(resp, "prompt_text") else "",
+                    user_prompt_chunks=f"{len(results)} chunks → {len(list(resp.sources))} used",
+                    duration_ms=(time.time() - t_llm) * 1000,
+                )
+            )
             traces.append(_trace("total", duration_ms=(time.time() - t0) * 1000))
             return SearchResponse(
                 answer=resp.answer,
@@ -175,15 +231,21 @@ async def search(req: SearchRequest):
 def _build_retrieval_only_response(results, traces=None):
     sources = []
     for i, r in enumerate(results):
-        sources.append(SourceInfo(
-            index=i + 1, source_file=r.source_file, heading_path=r.heading_path,
-            score=display_score(r.score), preview=r.content[:200],
-        ))
+        sources.append(
+            SourceInfo(
+                index=i + 1,
+                source_file=r.source_file,
+                heading_path=r.heading_path,
+                score=display_score(r.score),
+                preview=r.content[:200],
+            )
+        )
     answer = "（LLM 未配置）\n\n" + "\n\n---\n\n".join(
         f"[{i+1}] {s.preview}" for i, s in enumerate(sources)
     )
     return SearchResponse(
-        answer=answer, sources=sources,
+        answer=answer,
+        sources=sources,
         retrieval_stats={"chunks_found": len(results), "chunks_used": len(results)},
         trace=traces or [],
     )
@@ -199,7 +261,6 @@ def _needs_rewrite(query: str) -> bool:
 def _build_prompt_preview(query: str, results) -> str:
     """构建提交给 LLM 的 prompt 摘要"""
     chunks_summary = "\n".join(
-        f"[{i+1}] {r.source_file.split('/')[-1]} ({r.char_count}字)"
-        for i, r in enumerate(results)
+        f"[{i+1}] {r.source_file.split('/')[-1]} ({r.char_count}字)" for i, r in enumerate(results)
     )
     return f"Query: {query}\nChunks ({len(results)}):\n{chunks_summary}"

@@ -31,7 +31,7 @@ aliases: [向量数据库对比, LanceDB vs FAISS]
 ### 局限性
 
 - 🔸 单机部署，不支持分布式
-- 🔸 个人知识库场景无影响（10 万级文档） 
+- 🔸 个人知识库场景无影响（10 万级文档）
 
 ## 索引策略对比
 
@@ -40,7 +40,7 @@ aliases: [向量数据库对比, LanceDB vs FAISS]
 # 精度最高，速度最慢。适合 < 10K 数据
 table.search(query_vector).limit(5)
 
-# IVF_PQ（索引搜索）  
+# IVF_PQ（索引搜索）
 # 精度略降，速度提升 10-100x。适合 > 100K 数据
 table.create_index(num_sub_vectors=96)
 table.search(query_vector).limit(5)

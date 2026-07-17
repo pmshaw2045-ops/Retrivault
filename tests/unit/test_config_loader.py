@@ -1,4 +1,5 @@
 """测试配置加载器"""
+
 import pytest
 from pydantic import ValidationError
 

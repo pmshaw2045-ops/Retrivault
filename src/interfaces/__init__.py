@@ -4,6 +4,7 @@
 扩展新 Provider（如 Qdrant、Milvus、Ollama）时只需实现这些接口，
 在 Provider 注册工厂中注册即可，不改任何其他代码。
 """
+
 from abc import ABC, abstractmethod
 
 
@@ -26,9 +27,7 @@ class VectorStore(ABC):
         ...
 
     @abstractmethod
-    def search(
-        self, query_vector: list[float], top_k: int = 5
-    ) -> list[dict]:
+    def search(self, query_vector: list[float], top_k: int = 5) -> list[dict]:
         """向量搜索。返回 top_k 个最相似的 chunk，每个包含 content + metadata + _distance。
 
         Phase 1: 纯向量搜索
@@ -63,8 +62,9 @@ class LLMProvider(ABC):
     """
 
     @abstractmethod
-    def generate(self, system_prompt: str, user_prompt: str,
-                 temperature: float = 0.3, max_tokens: int = 2048) -> str:
+    def generate(
+        self, system_prompt: str, user_prompt: str, temperature: float = 0.3, max_tokens: int = 2048
+    ) -> str:
         """调用 LLM 生成回答。
 
         Args:
@@ -98,8 +98,7 @@ class EmbeddingProvider(ABC):
     """
 
     @abstractmethod
-    def embed_documents(self, texts: list[str],
-                        batch_size: int = 32) -> list[list[float]]:
+    def embed_documents(self, texts: list[str], batch_size: int = 32) -> list[list[float]]:
         """批量文档向量化。
 
         Args:

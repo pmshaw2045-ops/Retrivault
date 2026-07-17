@@ -6,6 +6,7 @@
   - OpenAI:     https://api.openai.com/v1
   - 任意兼容服务
 """
+
 from openai import OpenAI
 
 from src.interfaces import EmbeddingProvider
@@ -23,8 +24,9 @@ class APIEmbedder(EmbeddingProvider):
     用户无需下载 2.2GB 本地模型，有 API key 即可用。
     """
 
-    def __init__(self, api_key: str, base_url: str,
-                 model: str = "BAAI/bge-m3", batch_size: int = 32):
+    def __init__(
+        self, api_key: str, base_url: str, model: str = "BAAI/bge-m3", batch_size: int = 32
+    ):
         self._model_name = model
         self.batch_size = batch_size
         self.client = OpenAI(api_key=api_key, base_url=base_url)
@@ -33,8 +35,7 @@ class APIEmbedder(EmbeddingProvider):
     def model_name(self) -> str:
         return self._model_name
 
-    def embed_documents(self, texts: list[str],
-                        batch_size: int | None = None) -> list[list[float]]:
+    def embed_documents(self, texts: list[str], batch_size: int | None = None) -> list[list[float]]:
         """批量文档向量化"""
         if not texts:
             return []
@@ -43,7 +44,7 @@ class APIEmbedder(EmbeddingProvider):
         all_embeddings: list[list[float]] = []
 
         for i in range(0, len(texts), bs):
-            batch = texts[i:i + bs]
+            batch = texts[i : i + bs]
             resp = self.client.embeddings.create(
                 model=self._model_name,
                 input=batch,

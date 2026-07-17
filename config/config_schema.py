@@ -1,4 +1,5 @@
 """Pydantic v2 配置模型 + 校验逻辑"""
+
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
@@ -56,6 +57,7 @@ class PathsConfig(BaseModel):
 
 class AppConfig(BaseModel):
     """应用全量配置"""
+
     rag: RAGConfig = Field(default_factory=RAGConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     embedding: EmbeddingConfig = Field(default_factory=EmbeddingConfig)

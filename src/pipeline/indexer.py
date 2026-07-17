@@ -3,6 +3,7 @@
 编排全量/增量/恢复索引流程：
   scanner.scan() → parser.parse() → chunker.chunk() → embedder.embed() → vector_store.add()
 """
+
 import hashlib
 from collections import defaultdict
 from pathlib import Path
@@ -38,8 +39,7 @@ class Indexer:
         self.vector_store = vector_store
         self.index_manager = index_manager
 
-    def run(self, vault_path: str,
-            progress_callback=None) -> dict:
+    def run(self, vault_path: str, progress_callback=None) -> dict:
         """
         根据启动决策执行对应的索引操作。
 
@@ -54,8 +54,11 @@ class Indexer:
 
         if decision == IndexDecision.SKIP:
             state = self.index_manager.get_state(vault_path)
-            return {"status": "skipped", "doc_count": state.doc_count,
-                    "chunk_count": state.chunk_count}
+            return {
+                "status": "skipped",
+                "doc_count": state.doc_count,
+                "chunk_count": state.chunk_count,
+            }
 
         elif decision == IndexDecision.FIRST_INDEX:
             return self._full_index(vault_path, progress_callback)
@@ -104,8 +107,10 @@ class Indexer:
             for chunk in chunks:
                 chunk_id = chunk.metadata["chunk_id"]
                 self.index_manager.mark_chunk_pending(
-                    chunk_id, parsed.file_path,
-                    chunk.metadata["chunk_index"], chunk.metadata["chunk_hash"]
+                    chunk_id,
+                    parsed.file_path,
+                    chunk.metadata["chunk_index"],
+                    chunk.metadata["chunk_hash"],
                 )
                 all_chunks.append(chunk)
 
@@ -130,19 +135,26 @@ class Indexer:
             pending_by_file[p["source_file"]].add(p["chunk_id"])
 
         import yaml
+
         docs = []
         for abs_path in pending_by_file:
             p = Path(abs_path)
             if p.exists():
                 content = p.read_text(encoding="utf-8")
-                fm = yaml.safe_load(content.split("---", 2)[1]) if content.startswith("---") and "---" in content[3:] else None
-                docs.append(ScannedDocument(
-                    file_path=str(p),
-                    file_name=p.name,
-                    content=content,
-                    frontmatter=fm if isinstance(fm, dict) else None,
-                    file_mtime=p.stat().st_mtime,
-                ))
+                fm = (
+                    yaml.safe_load(content.split("---", 2)[1])
+                    if content.startswith("---") and "---" in content[3:]
+                    else None
+                )
+                docs.append(
+                    ScannedDocument(
+                        file_path=str(p),
+                        file_name=p.name,
+                        content=content,
+                        frontmatter=fm if isinstance(fm, dict) else None,
+                        file_mtime=p.stat().st_mtime,
+                    )
+                )
 
         doc_map = {d.file_path: d for d in docs}
 
@@ -155,8 +167,10 @@ class Indexer:
 
             # 每文件只分块一次
             file_chunks = self.chunker.chunk(
-                parsed.content, source_file=source_file,
-                tags=parsed.tags, wikilinks=parsed.wikilinks,
+                parsed.content,
+                source_file=source_file,
+                tags=parsed.tags,
+                wikilinks=parsed.wikilinks,
                 frontmatter=parsed.frontmatter,
             )
             for fc in file_chunks:
@@ -168,14 +182,15 @@ class Indexer:
         total_docs = len(docs)
         state = self.index_manager.get_state(vault_path)
         self.index_manager.mark_indexing_done(
-            vault_path, doc_count=total_docs,
-            chunk_count=state.chunk_count if state else len(all_chunks)
+            vault_path,
+            doc_count=total_docs,
+            chunk_count=state.chunk_count if state else len(all_chunks),
         )
         return {"status": "ok", "doc_count": total_docs, "chunk_count": len(all_chunks)}
 
-    def _incremental_index(self, vault_path: str,
-                           changed_files: list[str],
-                           progress_callback=None) -> dict:
+    def _incremental_index(
+        self, vault_path: str, changed_files: list[str], progress_callback=None
+    ) -> dict:
         """增量索引"""
         docs = self.scanner.scan(vault_path)
         doc_map = {d.file_path: d for d in docs}
@@ -192,8 +207,10 @@ class Indexer:
             doc = doc_map[abs_path]
             parsed = self.parser.parse(doc.content, doc.file_path)
             chunks = self.chunker.chunk(
-                parsed.content, source_file=parsed.file_path,
-                tags=parsed.tags, wikilinks=parsed.wikilinks,
+                parsed.content,
+                source_file=parsed.file_path,
+                tags=parsed.tags,
+                wikilinks=parsed.wikilinks,
                 frontmatter=parsed.frontmatter,
             )
 
@@ -209,8 +226,10 @@ class Indexer:
             for chunk in chunks:
                 chunk_id = chunk.metadata["chunk_id"]
                 self.index_manager.mark_chunk_pending(
-                    chunk_id, parsed.file_path,
-                    chunk.metadata["chunk_index"], chunk.metadata["chunk_hash"]
+                    chunk_id,
+                    parsed.file_path,
+                    chunk.metadata["chunk_index"],
+                    chunk.metadata["chunk_hash"],
                 )
                 all_chunks.append(chunk)
 
@@ -229,19 +248,21 @@ class Indexer:
 
         store_chunks = []
         for i, chunk in enumerate(chunks):
-            store_chunks.append({
-                "id": chunk.metadata["chunk_id"],
-                "vector": embeddings[i],
-                "content": chunk.content,
-                "source_file": chunk.metadata["source_file"],
-                "heading_path": chunk.metadata.get("heading_path", ""),
-                "chunk_index": chunk.metadata["chunk_index"],
-                "chunk_hash": chunk.metadata["chunk_hash"],
-                "tags": chunk.metadata.get("tags", []),
-                "wikilinks": chunk.metadata.get("wikilinks", []),
-                "frontmatter": chunk.metadata.get("frontmatter", {}),
-                "char_count": chunk.metadata.get("char_count", 0),
-            })
+            store_chunks.append(
+                {
+                    "id": chunk.metadata["chunk_id"],
+                    "vector": embeddings[i],
+                    "content": chunk.content,
+                    "source_file": chunk.metadata["source_file"],
+                    "heading_path": chunk.metadata.get("heading_path", ""),
+                    "chunk_index": chunk.metadata["chunk_index"],
+                    "chunk_hash": chunk.metadata["chunk_hash"],
+                    "tags": chunk.metadata.get("tags", []),
+                    "wikilinks": chunk.metadata.get("wikilinks", []),
+                    "frontmatter": chunk.metadata.get("frontmatter", {}),
+                    "char_count": chunk.metadata.get("char_count", 0),
+                }
+            )
 
             if progress_callback:
                 progress_callback("embedding", i + 1, len(chunks))
@@ -256,6 +277,7 @@ class Indexer:
     def _clear_vector_store(self):
         """清空向量库（重建表）"""
         import lancedb
+
         db = lancedb.connect(self.vector_store.db_path)
         if self.vector_store.TABLE_NAME in db.table_names():
             db.drop_table(self.vector_store.TABLE_NAME)

@@ -5,6 +5,7 @@
 2. 应用排除规则（excalidraw / .trash / .obsidian 工作区 / 隐藏文件）
 3. 读取文件全文 + 提取 frontmatter
 """
+
 import os
 import re
 from dataclasses import dataclass
@@ -16,9 +17,10 @@ import yaml
 @dataclass
 class ScannedDocument:
     """扫描到的文档原始数据"""
-    file_path: str           # 文件绝对路径
-    file_name: str           # 文件名（不含路径）
-    content: str             # 文件全文
+
+    file_path: str  # 文件绝对路径
+    file_name: str  # 文件名（不含路径）
+    content: str  # 文件全文
     frontmatter: dict | None = None  # YAML frontmatter（解析后的 dict）
     file_mtime: float = 0.0  # 文件修改时间戳
 
@@ -42,7 +44,7 @@ class ObsidianScanner:
 
     # 文件名排除模式
     EXCLUDE_PATTERNS: list[str] = [
-        r".*\.excalidraw\.md$",   # Excalidraw 元数据
+        r".*\.excalidraw\.md$",  # Excalidraw 元数据
     ]
 
     # 路径排除（相对于 vault 根目录的片段匹配）
@@ -103,13 +105,15 @@ class ObsidianScanner:
                 # 提取 frontmatter
                 frontmatter = self._extract_frontmatter(content)
 
-                documents.append(ScannedDocument(
-                    file_path=str(file_path),
-                    file_name=file_name,
-                    content=content,
-                    frontmatter=frontmatter,
-                    file_mtime=file_path.stat().st_mtime,
-                ))
+                documents.append(
+                    ScannedDocument(
+                        file_path=str(file_path),
+                        file_name=file_name,
+                        content=content,
+                        frontmatter=frontmatter,
+                        file_mtime=file_path.stat().st_mtime,
+                    )
+                )
 
         return documents
 

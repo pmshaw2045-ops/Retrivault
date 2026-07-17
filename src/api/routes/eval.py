@@ -1,4 +1,5 @@
 """POST /api/eval — 评测端点"""
+
 import traceback
 from pathlib import Path
 
@@ -79,7 +80,7 @@ async def run_eval(req: EvalRequest):
                 "precision@5": round(r.precision, 4),
                 "ndcg@5": round(r.ndcg, 4),
                 "latency_ms": round(r.latency_ms, 1),
-                "retrieved": r.retrieved_docs[:r.top_k],
+                "retrieved": r.retrieved_docs[: r.top_k],
             }
             for r in report.results
         ],

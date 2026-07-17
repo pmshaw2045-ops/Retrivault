@@ -1,4 +1,5 @@
 """GET /api/status — 索引状态 + 文档统计"""
+
 from fastapi import APIRouter
 
 from src.api.dependencies import get_components

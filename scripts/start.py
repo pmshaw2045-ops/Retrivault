@@ -6,6 +6,7 @@
 或：
     make start
 """
+
 import logging
 import os
 import subprocess
@@ -27,6 +28,7 @@ def _log_subprocess_output(stream, logger):
 def wait_for_service(url: str, timeout: int = 30) -> bool:
     """轮询等待服务就绪"""
     import httpx
+
     for _i in range(timeout):
         try:
             resp = httpx.get(url, timeout=1)

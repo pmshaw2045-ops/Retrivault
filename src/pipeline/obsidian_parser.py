@@ -7,6 +7,7 @@
   - ---\nfrontmatter\n---         YAML 元数据
   - > [!type] callout            语义块
 """
+
 import re
 from dataclasses import dataclass, field
 
@@ -16,15 +17,16 @@ import yaml
 @dataclass
 class ParsedDocument:
     """解析后的文档——比 ScannedDocument 多了结构化语法提取"""
+
     file_path: str
     file_name: str
-    content: str                   # 原始全文
+    content: str  # 原始全文
     frontmatter: dict | None = None
-    wikilinks: list[str] = field(default_factory=list)    # 去重后的链接目标列表
-    tags: list[str] = field(default_factory=list)          # 去重后的标签列表
-    callouts: list[dict] = field(default_factory=list)     # [{type, title, content, foldable}]
-    embeds: list[dict] = field(default_factory=list)       # [{target, heading?}]
-    dataview_blocks: int = 0       # dataview 代码块计数
+    wikilinks: list[str] = field(default_factory=list)  # 去重后的链接目标列表
+    tags: list[str] = field(default_factory=list)  # 去重后的标签列表
+    callouts: list[dict] = field(default_factory=list)  # [{type, title, content, foldable}]
+    embeds: list[dict] = field(default_factory=list)  # [{target, heading?}]
+    dataview_blocks: int = 0  # dataview 代码块计数
 
 
 class ObsidianParser:
@@ -45,10 +47,10 @@ class ObsidianParser:
     # ============================================================
     # 捕获组 1: 链接目标（不含 | 和 # 后的部分）
     WIKILINK_RE = re.compile(
-        r"\[\["                          # 开头 [[
-        r"([^\]|#]+)"                    # 捕获组1: 目标文件名（到 |、# 或 ]] 为止）
-        r"(?:[|#][^\]]+)?"               # 可选: |别名 或 #章节 或 #章节|别名
-        r"\]\]"                          # 结尾 ]]
+        r"\[\["  # 开头 [[
+        r"([^\]|#]+)"  # 捕获组1: 目标文件名（到 |、# 或 ]] 为止）
+        r"(?:[|#][^\]]+)?"  # 可选: |别名 或 #章节 或 #章节|别名
+        r"\]\]"  # 结尾 ]]
     )
 
     # ============================================================
@@ -56,9 +58,9 @@ class ObsidianParser:
     # ============================================================
     EMBED_RE = re.compile(
         r"!\[\["
-        r"([^\]|#]+)"                    # 捕获组1: 嵌入目标
-        r"(?:#([^\]|]+))?"               # 可选捕获组2: 章节锚点
-        r"(?:\|[^\]]+)?"                 # 可选: 别名
+        r"([^\]|#]+)"  # 捕获组1: 嵌入目标
+        r"(?:#([^\]|]+))?"  # 可选捕获组2: 章节锚点
+        r"(?:\|[^\]]+)?"  # 可选: 别名
         r"\]\]"
     )
 
@@ -66,18 +68,18 @@ class ObsidianParser:
     # Tags: #tag、#nested/tag、#中文/标签
     # ============================================================
     TAG_RE = re.compile(
-        r"(?<!\S)"                       # 前面是空白或行首（不在单词中间）
+        r"(?<!\S)"  # 前面是空白或行首（不在单词中间）
         r"#"
-        r"([a-zA-Z\u4e00-\u9fa5]"        # 首字符：字母或中文
-        r"[\w\u4e00-\u9fa5/-]*)"         # 后续：字母/数字/中文/下划线/连字符/斜杠
+        r"([a-zA-Z\u4e00-\u9fa5]"  # 首字符：字母或中文
+        r"[\w\u4e00-\u9fa5/-]*)"  # 后续：字母/数字/中文/下划线/连字符/斜杠
     )
 
     # ============================================================
     # Callouts: > [!TYPE]+ 标题\n> 内容
     # ============================================================
     CALLOUT_RE = re.compile(
-        r">\s*\[!(\w+)\]([+-]?)\s*(.*?)\n"   # > [!TYPE][+/-] 标题
-        r"((?:>\s*[^\n]*\n?)+)"               # callout 内容（连续 > 行）
+        r">\s*\[!(\w+)\]([+-]?)\s*(.*?)\n"  # > [!TYPE][+/-] 标题
+        r"((?:>\s*[^\n]*\n?)+)"  # callout 内容（连续 > 行）
     )
 
     IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".bmp", ".webp", ".ico"}
@@ -159,7 +161,7 @@ class ObsidianParser:
         """提取所有 #tag（排除代码块和 URL 中的）"""
         # 先移除代码块（```...``` 和 `...`）
         clean = re.sub(r"```[\s\S]*?```", "", content)  # 移除围栏代码块
-        clean = re.sub(r"`[^`]+`", "", clean)            # 移除行内代码
+        clean = re.sub(r"`[^`]+`", "", clean)  # 移除行内代码
 
         # 移除 URL（http... 中的 # 不是 tag）
         clean = re.sub(r"https?://\S+", "", clean)
@@ -187,12 +189,14 @@ class ObsidianParser:
             body = match.group(4).strip()
             # 去掉每行的 > 前缀
             body = re.sub(r"^>\s?", "", body, flags=re.MULTILINE)
-            callouts.append({
-                "type": callout_type,
-                "title": title,
-                "content": body,
-                "foldable": foldable,
-            })
+            callouts.append(
+                {
+                    "type": callout_type,
+                    "title": title,
+                    "content": body,
+                    "foldable": foldable,
+                }
+            )
         return callouts
 
     # ---------- Embeds ----------

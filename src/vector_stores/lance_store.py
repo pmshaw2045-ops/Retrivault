@@ -3,6 +3,7 @@
 实现 VectorStore 接口。
 LanceDB 嵌入式列式数据库——零外部服务依赖。
 """
+
 import json
 from datetime import date, datetime
 from pathlib import Path
@@ -20,7 +21,7 @@ def _json_safe(obj):
 
 def _default_serializer(o):
     """date/datetime → ISO 字符串"""
-    if isinstance(o, (date, datetime)):
+    if isinstance(o, date | datetime):
         return o.isoformat()
     raise TypeError(f"Object of type {type(o)} is not JSON serializable")
 
@@ -63,19 +64,21 @@ class LanceVectorStore(VectorStore):
         if self.TABLE_NAME in self.db.table_names():
             self._table = self.db.open_table(self.TABLE_NAME)
         else:
-            schema = pa.schema([
-                ("id", pa.string()),
-                ("vector", pa.list_(pa.float32(), self.dim)),
-                ("content", pa.string()),
-                ("source_file", pa.string()),
-                ("heading_path", pa.string()),
-                ("chunk_index", pa.int32()),
-                ("chunk_hash", pa.string()),
-                ("tags", pa.string()),
-                ("wikilinks", pa.string()),
-                ("frontmatter", pa.string()),
-                ("char_count", pa.int32()),
-            ])
+            schema = pa.schema(
+                [
+                    ("id", pa.string()),
+                    ("vector", pa.list_(pa.float32(), self.dim)),
+                    ("content", pa.string()),
+                    ("source_file", pa.string()),
+                    ("heading_path", pa.string()),
+                    ("chunk_index", pa.int32()),
+                    ("chunk_hash", pa.string()),
+                    ("tags", pa.string()),
+                    ("wikilinks", pa.string()),
+                    ("frontmatter", pa.string()),
+                    ("char_count", pa.int32()),
+                ]
+            )
             self._table = self.db.create_table(self.TABLE_NAME, schema=schema)
             # FTS 索引可以立即建（不需要训练数据）
             self._table.create_fts_index("content")
@@ -102,19 +105,22 @@ class LanceVectorStore(VectorStore):
         rows = []
         for c in chunks:
             import json
-            rows.append({
-                "id": c["id"],
-                "vector": c["vector"],
-                "content": c["content"],
-                "source_file": c.get("source_file", ""),
-                "heading_path": c.get("heading_path", ""),
-                "chunk_index": c.get("chunk_index", 0),
-                "chunk_hash": c.get("chunk_hash", ""),
-                "tags": json.dumps(c.get("tags", []), ensure_ascii=False),
-                "wikilinks": json.dumps(c.get("wikilinks", []), ensure_ascii=False),
-                "frontmatter": _json_safe(c.get("frontmatter", {})),
-                "char_count": c.get("char_count", 0),
-            })
+
+            rows.append(
+                {
+                    "id": c["id"],
+                    "vector": c["vector"],
+                    "content": c["content"],
+                    "source_file": c.get("source_file", ""),
+                    "heading_path": c.get("heading_path", ""),
+                    "chunk_index": c.get("chunk_index", 0),
+                    "chunk_hash": c.get("chunk_hash", ""),
+                    "tags": json.dumps(c.get("tags", []), ensure_ascii=False),
+                    "wikilinks": json.dumps(c.get("wikilinks", []), ensure_ascii=False),
+                    "frontmatter": _json_safe(c.get("frontmatter", {})),
+                    "char_count": c.get("char_count", 0),
+                }
+            )
 
         self._table.add(rows)
 
@@ -129,22 +135,14 @@ class LanceVectorStore(VectorStore):
                     # 索引创建失败不影响功能——退化到 flat 搜索
                     pass
 
-    def search(
-        self, query_vector: list[float], top_k: int = 5
-    ) -> list[dict]:
+    def search(self, query_vector: list[float], top_k: int = 5) -> list[dict]:
         """
         向量搜索（余弦距离）。
 
         返回 top_k 个最相似的 chunk，包含 content + metadata + _distance。
         """
         self._ensure_table()
-        results = (
-            self._table
-            .search(query_vector)
-            .metric("cosine")
-            .limit(top_k)
-            .to_list()
-        )
+        results = self._table.search(query_vector).metric("cosine").limit(top_k).to_list()
         return self._format_results(results)
 
     def search_hybrid(
@@ -157,8 +155,7 @@ class LanceVectorStore(VectorStore):
         """
         self._ensure_table()
         results = (
-            self._table
-            .search(query_vector, fts_columns=["content"])
+            self._table.search(query_vector, fts_columns=["content"])
             .metric("cosine")
             .limit(top_k * 3)
             .to_list()
@@ -190,6 +187,7 @@ class LanceVectorStore(VectorStore):
     def _format_results(results: list[dict]) -> list[dict]:
         """格式化搜索结果，反序列化 JSON 字段"""
         import json
+
         for r in results:
             for field in ("tags", "wikilinks"):
                 if field in r and isinstance(r[field], str):

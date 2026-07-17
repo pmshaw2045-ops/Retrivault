@@ -9,6 +9,7 @@
 6. overlap：相邻 chunk 间以完整 sentence 为单位重叠（overlap_sentences = 2）
 7. 代码块（```...```）作为原子单元，不拦腰截断
 """
+
 import hashlib
 import re
 from dataclasses import dataclass, field
@@ -17,7 +18,8 @@ from dataclasses import dataclass, field
 @dataclass
 class Chunk:
     """分块结果"""
-    content: str                              # chunk 文本
+
+    content: str  # chunk 文本
     metadata: dict = field(default_factory=dict)  # 元数据
 
 
@@ -85,16 +87,18 @@ class Chunker:
 
         # Step 3: 填充 chunk 的 metadata
         for i, chunk in enumerate(all_chunks):
-            chunk.metadata.update({
-                "source_file": source_file,
-                "chunk_index": i,
-                "chunk_id": self._make_chunk_id(source_file, i),
-                "chunk_hash": self._hash_content(chunk.content),
-                "tags": tags or [],
-                "wikilinks": wikilinks or [],
-                "frontmatter": frontmatter or {},
-                "char_count": len(chunk.content),
-            })
+            chunk.metadata.update(
+                {
+                    "source_file": source_file,
+                    "chunk_index": i,
+                    "chunk_id": self._make_chunk_id(source_file, i),
+                    "chunk_hash": self._hash_content(chunk.content),
+                    "tags": tags or [],
+                    "wikilinks": wikilinks or [],
+                    "frontmatter": frontmatter or {},
+                    "char_count": len(chunk.content),
+                }
+            )
 
         # Step 4: 跨 section 合并过小的 chunk
         all_chunks = self._merge_tiny_chunks(all_chunks, "root")
@@ -216,10 +220,12 @@ class Chunker:
             else:
                 # 当前 chunk 已满
                 if current_text:
-                    chunks.append(Chunk(
-                        content=current_text,
-                        metadata={"heading_path": heading_path},
-                    ))
+                    chunks.append(
+                        Chunk(
+                            content=current_text,
+                            metadata={"heading_path": heading_path},
+                        )
+                    )
 
                 # 如果这个 atom 本身也超长，需要 sentence-level 拆分
                 if atom_len > self.chunk_size:
@@ -233,10 +239,12 @@ class Chunker:
 
         # 最后一个 chunk
         if current_text:
-            chunks.append(Chunk(
-                content=current_text,
-                metadata={"heading_path": heading_path},
-            ))
+            chunks.append(
+                Chunk(
+                    content=current_text,
+                    metadata={"heading_path": heading_path},
+                )
+            )
 
         return chunks
 
@@ -291,14 +299,12 @@ class Chunker:
                 before = body[pos:start].strip()
                 # 按段落拆分普通内容
                 if before:
-                    atoms.extend(
-                        p.strip() for p in before.split(self.PARAGRAPH_SEP) if p.strip()
-                    )
+                    atoms.extend(p.strip() for p in before.split(self.PARAGRAPH_SEP) if p.strip())
 
             # 找到配对 ```
             end = self.FENCE_RE.search(body, match.end())
             if end:
-                code_block = body[start:end.end()]
+                code_block = body[start : end.end()]
                 atoms.append(code_block)
                 pos = end.end()
             else:
@@ -311,9 +317,7 @@ class Chunker:
         if pos < len(body):
             remaining = body[pos:].strip()
             if remaining:
-                atoms.extend(
-                    p.strip() for p in remaining.split(self.PARAGRAPH_SEP) if p.strip()
-                )
+                atoms.extend(p.strip() for p in remaining.split(self.PARAGRAPH_SEP) if p.strip())
 
         return atoms
 
@@ -358,7 +362,7 @@ class Chunker:
         """极端情况：按字符截断"""
         chunks: list[Chunk] = []
         for i in range(0, len(text), self.chunk_size):
-            chunk_text = text[i:i + self.chunk_size]
+            chunk_text = text[i : i + self.chunk_size]
             chunks.append(Chunk(content=chunk_text, metadata={"heading_path": heading_path}))
         return chunks
 
@@ -401,10 +405,10 @@ class Chunker:
         for i, ch in enumerate(text):
             if ch in "。！？":
                 # 从下一个句子开头取
-                after = text[i + 1:].lstrip()
+                after = text[i + 1 :].lstrip()
                 if after:
                     return after
-                return text[i + 1:]  # 至少跳过标点
+                return text[i + 1 :]  # 至少跳过标点
         return text
 
     # ============================================================
@@ -421,7 +425,7 @@ class Chunker:
         idx = rest.find("\n---")
         if idx == -1:
             return content
-        return rest[idx + 4:].lstrip()
+        return rest[idx + 4 :].lstrip()
 
     @staticmethod
     def _join_path(parent: str, child: str) -> str:

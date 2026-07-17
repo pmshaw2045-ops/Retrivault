@@ -1,4 +1,5 @@
 """测试配置 + 共享 fixtures"""
+
 import tempfile
 from pathlib import Path
 
@@ -37,30 +38,11 @@ def temp_config_dir():
 def minimal_config_yaml():
     """最小可用的 config.yaml 内容"""
     return {
-        "rag": {
-            "chunk_size": 512,
-            "chunk_overlap": 64,
-            "top_k": 5,
-            "similarity_threshold": 0.6
-        },
-        "llm": {
-            "model": "deepseek-v4-pro",
-            "temperature": 0.3,
-            "max_tokens": 2048
-        },
-        "embedding": {
-            "model": "BAAI/bge-m3",
-            "batch_size": 32,
-            "device": "cpu"
-        },
-        "search": {
-            "mode": "vector",
-            "rerank_enabled": False
-        },
-        "paths": {
-            "lancedb_dir": "data/lancedb",
-            "sqlite_db": "data/rag.db"
-        }
+        "rag": {"chunk_size": 512, "chunk_overlap": 64, "top_k": 5, "similarity_threshold": 0.6},
+        "llm": {"model": "deepseek-v4-pro", "temperature": 0.3, "max_tokens": 2048},
+        "embedding": {"model": "BAAI/bge-m3", "batch_size": 32, "device": "cpu"},
+        "search": {"mode": "vector", "rerank_enabled": False},
+        "paths": {"lancedb_dir": "data/lancedb", "sqlite_db": "data/rag.db"},
     }
 
 

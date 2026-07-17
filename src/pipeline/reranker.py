@@ -4,6 +4,7 @@
   - 硅基流动: https://api.siliconflow.cn/v1/rerank
   - Cohere / Jina 等兼容服务
 """
+
 import httpx
 
 
@@ -14,14 +15,12 @@ class Reranker:
     API Key 优先级：RERANK_API_KEY > EMBEDDING_API_KEY > LLM_API_KEY
     """
 
-    def __init__(self, api_key: str, base_url: str,
-                 model: str = "BAAI/bge-reranker-v2-m3"):
+    def __init__(self, api_key: str, base_url: str, model: str = "BAAI/bge-reranker-v2-m3"):
         self.model = model
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
 
-    def rerank(self, query: str, documents: list[str],
-               top_n: int | None = None) -> list[dict]:
+    def rerank(self, query: str, documents: list[str], top_n: int | None = None) -> list[dict]:
         if not documents:
             return []
 

@@ -1,4 +1,5 @@
 """集成测试 — 端到端搜索 Pipeline（用 sample_vault）"""
+
 from unittest.mock import MagicMock
 
 from src.db.schema import init_db
@@ -68,8 +69,7 @@ class TestSearchPipeline:
         vector_store = LanceVectorStore(db_path=lance_path)
         index_manager = IndexManager(db, embedder.model_name)
         indexer = Indexer(
-            ObsidianScanner(), ObsidianParser(),
-            Chunker(), embedder, vector_store, index_manager
+            ObsidianScanner(), ObsidianParser(), Chunker(), embedder, vector_store, index_manager
         )
 
         indexer.run(str(sample_vault))
@@ -89,8 +89,7 @@ class TestSearchPipeline:
         vector_store = LanceVectorStore(db_path=lance_path)
         index_manager = IndexManager(db, embedder.model_name)
         indexer = Indexer(
-            ObsidianScanner(), ObsidianParser(),
-            Chunker(), embedder, vector_store, index_manager
+            ObsidianScanner(), ObsidianParser(), Chunker(), embedder, vector_store, index_manager
         )
 
         # 第一次：全量索引
@@ -99,7 +98,10 @@ class TestSearchPipeline:
 
         # 第二次：要么跳过（无变更），要么OK（合并导致重索引后状态一致）
         result2 = indexer.run(str(sample_vault))
-        assert result2["status"] in ("ok", "skipped"), f"Expected ok or skipped, got {result2['status']}"
+        assert result2["status"] in (
+            "ok",
+            "skipped",
+        ), f"Expected ok or skipped, got {result2['status']}"
 
     def test_empty_retrieval_no_llm_call(self, sample_vault, tmp_path):
         """空检索不调 LLM"""

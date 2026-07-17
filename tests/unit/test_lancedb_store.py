@@ -1,4 +1,5 @@
 """测试 LanceVectorStore — CRUD、搜索、删除"""
+
 import tempfile
 
 import pytest
@@ -128,19 +129,23 @@ class TestLanceDBPersistence:
 
         # 写入
         store1 = LanceVectorStore(db_path=db_path, dim=4)
-        store1.add_chunks([{
-            "id": "persist_001",
-            "vector": [0.1, 0.2, 0.3, 0.4],
-            "content": "persistence test",
-            "source_file": "test.md",
-            "heading_path": "",
-            "chunk_index": 0,
-            "chunk_hash": "xyz",
-            "tags": [],
-            "wikilinks": [],
-            "frontmatter": {},
-            "char_count": 16,
-        }])
+        store1.add_chunks(
+            [
+                {
+                    "id": "persist_001",
+                    "vector": [0.1, 0.2, 0.3, 0.4],
+                    "content": "persistence test",
+                    "source_file": "test.md",
+                    "heading_path": "",
+                    "chunk_index": 0,
+                    "chunk_hash": "xyz",
+                    "tags": [],
+                    "wikilinks": [],
+                    "frontmatter": {},
+                    "char_count": 16,
+                }
+            ]
+        )
 
         # 读取（新实例，同路径）
         store2 = LanceVectorStore(db_path=db_path, dim=4)

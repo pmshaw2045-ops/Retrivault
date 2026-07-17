@@ -1,4 +1,5 @@
 """POST /api/index + GET /api/index/progress"""
+
 import asyncio
 import logging
 
@@ -39,6 +40,7 @@ async def trigger_index(req: IndexRequest):
     def _run():
         global _index_progress
         try:
+
             def progress_cb(phase, current, total):
                 _index_progress.phase = phase
                 _index_progress.current = current

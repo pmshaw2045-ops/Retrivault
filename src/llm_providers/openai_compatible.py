@@ -2,6 +2,7 @@
 
 支持 DeepSeek / OpenAI / Ollama 等所有 OpenAI 兼容 API。
 """
+
 from openai import OpenAI
 
 from src.interfaces import LLMProvider
@@ -21,8 +22,9 @@ class OpenAICompatibleProvider(LLMProvider):
         self.model = model
         self.client = OpenAI(api_key=api_key, base_url=base_url)
 
-    def generate(self, system_prompt: str, user_prompt: str,
-                 temperature: float = 0.3, max_tokens: int = 2048) -> str:
+    def generate(
+        self, system_prompt: str, user_prompt: str, temperature: float = 0.3, max_tokens: int = 2048
+    ) -> str:
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[

@@ -9,6 +9,7 @@
         - "chunk_hash_xxx"
       description: "应召回Agent 落地12条"
 """
+
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -42,12 +43,14 @@ class GoldenDataset:
 
         queries = []
         for item in data.get("queries", []):
-            queries.append(GoldenQuery(
-                query=item["query"],
-                relevant_docs=item.get("relevant_docs", []),
-                relevant_chunks=item.get("relevant_chunks", []),
-                description=item.get("description", ""),
-            ))
+            queries.append(
+                GoldenQuery(
+                    query=item["query"],
+                    relevant_docs=item.get("relevant_docs", []),
+                    relevant_chunks=item.get("relevant_chunks", []),
+                    description=item.get("description", ""),
+                )
+            )
 
         return cls(
             name=data.get("name", Path(path).stem),
@@ -58,10 +61,12 @@ class GoldenDataset:
     def from_dict(cls, name: str, query_list: list[dict]) -> "GoldenDataset":
         queries = []
         for item in query_list:
-            queries.append(GoldenQuery(
-                query=item["query"],
-                relevant_docs=item.get("relevant_docs", []),
-                relevant_chunks=item.get("relevant_chunks", []),
-                description=item.get("description", ""),
-            ))
+            queries.append(
+                GoldenQuery(
+                    query=item["query"],
+                    relevant_docs=item.get("relevant_docs", []),
+                    relevant_chunks=item.get("relevant_chunks", []),
+                    description=item.get("description", ""),
+                )
+            )
         return cls(name=name, queries=queries)

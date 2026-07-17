@@ -1,4 +1,5 @@
 """向量存储 Provider 注册工厂"""
+
 from src.interfaces import VectorStore
 
 # Provider 注册表
@@ -13,7 +14,9 @@ def register_provider(name: str, cls: type[VectorStore]) -> None:
 def get_provider(name: str) -> type[VectorStore]:
     """获取向量存储 Provider 类"""
     if name not in _vector_stores:
-        raise ValueError(f"Unknown vector store provider: {name}. Available: {list(_vector_stores.keys())}")
+        raise ValueError(
+            f"Unknown vector store provider: {name}. Available: {list(_vector_stores.keys())}"
+        )
     return _vector_stores[name]
 
 

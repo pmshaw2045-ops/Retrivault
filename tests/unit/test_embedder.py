@@ -1,4 +1,5 @@
 """测试 LocalBGEEmbedder — batch、query instruction、model_name"""
+
 from unittest.mock import patch
 
 import numpy as np
@@ -22,11 +23,7 @@ class TestEmbedderBasic:
 
     def test_custom_params(self):
         """自定义参数"""
-        embedder = LocalBGEEmbedder(
-            model_name="BAAI/bge-small",
-            device="mps",
-            batch_size=16
-        )
+        embedder = LocalBGEEmbedder(model_name="BAAI/bge-small", device="mps", batch_size=16)
         assert embedder.model_name == "BAAI/bge-small"
         assert embedder.batch_size == 16
 
@@ -36,7 +33,7 @@ class TestQueryEmbedding:
 
     def test_query_adds_instruction_prefix(self):
         """embed_query 自动加 instruction prefix"""
-        with patch.object(LocalBGEEmbedder, 'model') as mock_model:
+        with patch.object(LocalBGEEmbedder, "model") as mock_model:
             mock_model.encode.return_value = np.zeros(1024)
             embedder = LocalBGEEmbedder()
             embedder.embed_query("测试查询")
@@ -47,7 +44,7 @@ class TestQueryEmbedding:
 
     def test_embed_query_returns_list(self):
         """返回 Python list，不是 numpy array"""
-        with patch.object(LocalBGEEmbedder, 'model') as mock_model:
+        with patch.object(LocalBGEEmbedder, "model") as mock_model:
             mock_model.encode.return_value = np.zeros(1024)
             embedder = LocalBGEEmbedder()
             result = embedder.embed_query("test")
@@ -66,7 +63,7 @@ class TestDocumentEmbedding:
 
     def test_batch_splitting(self):
         """验证 batch 分片逻辑"""
-        with patch.object(LocalBGEEmbedder, 'model') as mock_model:
+        with patch.object(LocalBGEEmbedder, "model") as mock_model:
             # 模拟：每次 encode 返回 batch_size 个 1024 维向量
             def fake_encode(texts, **kwargs):
                 return np.random.randn(len(texts), 1024).astype(np.float32)
@@ -85,7 +82,7 @@ class TestDocumentEmbedding:
 
     def test_output_is_normalized(self):
         """输出应为归一化向量"""
-        with patch.object(LocalBGEEmbedder, 'model') as mock_model:
+        with patch.object(LocalBGEEmbedder, "model") as mock_model:
             mock_model.encode.return_value = np.zeros(1024)
             embedder = LocalBGEEmbedder()
             embedder.embed_documents(["text"])

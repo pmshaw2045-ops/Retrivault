@@ -1,4 +1,5 @@
 """测试 Chunker — MD 结构感知分块引擎"""
+
 from src.pipeline.chunker import Chunker
 
 
@@ -146,9 +147,9 @@ def hello():
         # 验证：```python 出现的位置，其 chunk 中必须有完整的代码块
         for chunk in chunks:
             if "```python" in chunk.content:
-                assert "```" in chunk.content[chunk.content.index("```python") + 10:]
+                assert "```" in chunk.content[chunk.content.index("```python") + 10 :]
                 # 应该有闭合 ```
-                after_open = chunk.content[chunk.content.index("```python"):]
+                after_open = chunk.content[chunk.content.index("```python") :]
                 assert after_open.count("```") >= 2  # 开头和结尾
 
     def test_inline_code_not_broken(self):
@@ -188,8 +189,9 @@ class TestSentenceSplitting:
         for i, chunk in enumerate(chunks):
             stripped = chunk.content.strip()
             # 至少不以残缺方式结尾——结尾是标点符号
-            assert stripped[-1] in "。！？.\n,，;；:：" or i == len(chunks) - 1, \
-                f"Chunk {i} ends with '{stripped[-5:]}'"
+            assert (
+                stripped[-1] in "。！？.\n,，;；:：" or i == len(chunks) - 1
+            ), f"Chunk {i} ends with '{stripped[-5:]}'"
 
 
 class TestMetadata:

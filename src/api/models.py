@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 # Search
 # ============================================================
 
+
 class SearchRequest(BaseModel):
     query: str = Field(..., min_length=1, description="搜索查询")
     top_k: int = Field(default=5, ge=1, le=20)
@@ -36,15 +37,16 @@ class SearchResponse(BaseModel):
 # Index
 # ============================================================
 
+
 class IndexRequest(BaseModel):
     action: str = Field(default="full", pattern="^(full|incremental|resume)$")
 
 
 class IndexProgress(BaseModel):
-    status: str           # idle|indexing|ready|error
+    status: str  # idle|indexing|ready|error
     doc_count: int
     chunk_count: int
-    phase: str = ""       # scanning|embedding
+    phase: str = ""  # scanning|embedding
     current: int = 0
     total: int = 0
 
@@ -53,8 +55,9 @@ class IndexProgress(BaseModel):
 # Status
 # ============================================================
 
+
 class StatusResponse(BaseModel):
-    state: str            # needs_index|indexing|ready|error
+    state: str  # needs_index|indexing|ready|error
     doc_count: int
     chunk_count: int
     vault_path: str = ""
@@ -65,6 +68,7 @@ class StatusResponse(BaseModel):
 # ============================================================
 # Config
 # ============================================================
+
 
 class ConfigUpdate(BaseModel):
     top_k: int | None = Field(default=None, ge=1, le=20)
@@ -89,6 +93,7 @@ class ConfigResponse(BaseModel):
 # ============================================================
 # Evaluate
 # ============================================================
+
 
 class EvaluateRequest(BaseModel):
     query: str

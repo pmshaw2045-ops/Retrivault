@@ -1,12 +1,22 @@
 # Retrivault
 
-> **面向 Obsidian 的 RAG 系统**——指定你的 Vault 目录，用自然语言搜索，获得带引用溯源的精准回答。
+> **RAG system for Obsidian** — Point to your Vault directory, search with natural language, get precise answers with cited sources.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/pmshaw2045-ops/Retrivault/ci.yml?label=CI&logo=github)](https://github.com/pmshaw2045-ops/Retrivault/actions)
 [![Python](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Last commit](https://img.shields.io/github/last-commit/pmshaw2045-ops/Retrivault)](https://github.com/pmshaw2045-ops/Retrivault/commits/main)
 [![Stars](https://img.shields.io/github/stars/pmshaw2045-ops/Retrivault?style=flat&logo=github)](https://github.com/pmshaw2045-ops/Retrivault)
+
+A self-hosted Retrieval-Augmented Generation system designed for **Obsidian Vaults**. It parses Markdown with full Obsidian syntax support (wikilinks, tags, callouts, embeds, frontmatter), indexes with LanceDB, and answers questions via LLM with transparent SSE streaming — every pipeline step is visible in the browser.
+
+**Key features:** Hybrid search (vector + FTS), Chinese-optimized tokenization (jieba), BGE-M3 embeddings, BGE-Reranker re-ranking, built-in evaluation (Hit Rate / MRR / NDCG / Precision / Recall), Docker support.
+
+Supports DeepSeek, OpenAI, Ollama as LLM backends, and both API and local BGE-M3 for embeddings.
+
+---
+
+> **面向 Obsidian 的 RAG 系统**——指定你的 Vault 目录，用自然语言搜索，获得带引用溯源的精准回答。
 
 ***
 

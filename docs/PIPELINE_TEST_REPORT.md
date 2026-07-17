@@ -1,10 +1,10 @@
 # Retrivault Pipeline 端到端验证报告
 
-> 验证日期：2026-07-17  
-> 数据规模：25 篇样本文档 / 33 个 chunk  
-> 检索模式：hybrid (余弦距离 + FTS)  
-> Embedding：BGE-M3 (硅基流动 API)  
-> Reranker：BGE-Reranker-v2-M3  
+> 验证日期：2026-07-17
+> 数据规模：25 篇样本文档 / 33 个 chunk
+> 检索模式：hybrid (余弦距离 + FTS)
+> Embedding：BGE-M3 (硅基流动 API)
+> Reranker：BGE-Reranker-v2-M3
 > LLM：DeepSeek V4 Pro
 
 ---

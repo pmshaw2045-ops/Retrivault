@@ -7,6 +7,7 @@
 4. 引用注入（[1][2] 标记 + 来源信息）
 5. 空结果短路（不调用 LLM，直接返回"无相关信息"）
 """
+
 from dataclasses import dataclass, field
 
 from src.interfaces import LLMProvider
@@ -16,6 +17,7 @@ from src.pipeline.retriever import SearchResult, display_score
 @dataclass
 class SearchResponse:
     """搜索响应"""
+
     answer: str
     sources: list[dict] = field(default_factory=list)
     retrieval_stats: dict = field(default_factory=dict)
@@ -91,9 +93,7 @@ class Generator:
 
         # 组装 Prompt
         sources_text = self._format_sources(selected)
-        user_prompt = self.USER_PROMPT_TEMPLATE.format(
-            sources=sources_text, query=query
-        )
+        user_prompt = self.USER_PROMPT_TEMPLATE.format(sources=sources_text, query=query)
 
         # 调用 LLM
         answer = self.llm.generate(
@@ -109,13 +109,17 @@ class Generator:
         # 来源信息
         sources = []
         for i, chunk in enumerate(selected):
-            sources.append({
-                "index": i + 1,
-                "source_file": chunk.source_file,
-                "heading_path": chunk.heading_path,
-                "score": display_score(chunk.score),
-                "preview": chunk.content[:100] + "..." if len(chunk.content) > 100 else chunk.content,
-            })
+            sources.append(
+                {
+                    "index": i + 1,
+                    "source_file": chunk.source_file,
+                    "heading_path": chunk.heading_path,
+                    "score": display_score(chunk.score),
+                    "preview": chunk.content[:100] + "..."
+                    if len(chunk.content) > 100
+                    else chunk.content,
+                }
+            )
 
         return SearchResponse(
             answer=answer_with_citations,
@@ -123,9 +127,7 @@ class Generator:
             retrieval_stats={
                 "chunks_found": len(results),
                 "chunks_used": len(selected),
-                "tokens_used": self._estimate_tokens(
-                    self.SYSTEM_PROMPT + "\n" + user_prompt
-                ),
+                "tokens_used": self._estimate_tokens(self.SYSTEM_PROMPT + "\n" + user_prompt),
             },
             prompt_text=f"System:\n{self.SYSTEM_PROMPT}\n\n--- User ---\n{user_prompt}",
         )
@@ -182,6 +184,7 @@ class Generator:
         如果没加，在末尾追加来源提示。
         """
         import re
+
         if re.search(r"\[\d+\]", answer):
             return answer  # 已有引用标记，不重复添加
         return answer  # LLM 遵守 prompt 的话不需要后处理
@@ -199,9 +202,7 @@ class Generator:
             if chunk.heading_path:
                 source_info += f" > {chunk.heading_path}"
 
-            parts.append(
-                f"[{i + 1}] ({source_info})\n{chunk.content}"
-            )
+            parts.append(f"[{i + 1}] ({source_info})\n{chunk.content}")
         return "\n\n---\n\n".join(parts)
 
     # ============================================================
@@ -215,7 +216,7 @@ class Generator:
         委托给 LLMProvider 实现（各家 tokenizer 不同）。
         如果 Provider 不支持，用字符数/2 做粗略估算。
         """
-        if hasattr(self.llm, 'count_tokens'):
+        if hasattr(self.llm, "count_tokens"):
             return self.llm.count_tokens(text)
         # 粗略估算：中文约 1.5 字符/token，英文约 4 字符/token
         return max(1, len(text) // 2)
@@ -243,5 +244,5 @@ class Generator:
             truncated.rfind("\n"),
         )
         if last_period > max_chars // 2:
-            return truncated[:last_period + 1] + "…"
+            return truncated[: last_period + 1] + "…"
         return truncated + "…"

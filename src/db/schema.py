@@ -5,6 +5,7 @@
   - chunk_progress  Chunk 级别进度（支撑断点恢复 + 模型版本检测）
   - doc_manifest    文档清单（支撑增量更新判断）
 """
+
 import sqlite3
 
 SCHEMA_VERSION = 1

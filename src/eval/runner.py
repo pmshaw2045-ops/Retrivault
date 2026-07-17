@@ -3,6 +3,7 @@
 对金标数据集中的每个 query 执行检索，计算全部指标。
 支持多配置对比（different modes, thresholds, etc.）。
 """
+
 import time
 from dataclasses import dataclass, field
 
@@ -20,6 +21,7 @@ from src.eval.metrics import (
 @dataclass
 class EvalResult:
     """单条 query 的评测结果"""
+
     query: str
     hit: float
     mrr: float
@@ -35,6 +37,7 @@ class EvalResult:
 @dataclass
 class EvalReport:
     """完整评测报告"""
+
     config_name: str
     total_queries: int
     top_k: int
@@ -50,6 +53,7 @@ class EvalReport:
 @dataclass
 class EvalCompareReport:
     """多配置对比报告"""
+
     reports: list[EvalReport] = field(default_factory=list)
 
 
@@ -66,14 +70,19 @@ class EvalRunner:
         self.comps = comps
         self.dataset = dataset
 
-    async def run(self, mode: str = "vector", top_k: int = 5,
-            similarity_threshold: float = 0.0,
-            config_name: str = "") -> EvalReport:
+    async def run(
+        self,
+        mode: str = "vector",
+        top_k: int = 5,
+        similarity_threshold: float = 0.0,
+        config_name: str = "",
+    ) -> EvalReport:
         results: list[EvalResult] = []
 
         for gq in self.dataset.queries:
-            er = await self._eval_one(gq, mode=mode, top_k=top_k,
-                                      similarity_threshold=similarity_threshold)
+            er = await self._eval_one(
+                gq, mode=mode, top_k=top_k, similarity_threshold=similarity_threshold
+            )
             results.append(er)
 
         n = len(results)
@@ -89,7 +98,9 @@ class EvalRunner:
             avg_ndcg=sum(r.ndcg for r in results) / n if n else 0,
             avg_latency_ms=sum(r.latency_ms for r in results) / n if n else 0,
         )
-        EvalRunner._save_last(report, config={"mode": mode, "top_k": top_k, "threshold": similarity_threshold})
+        EvalRunner._save_last(
+            report, config={"mode": mode, "top_k": top_k, "threshold": similarity_threshold}
+        )
         return report
 
     async def compare(self, configs: list[dict]) -> EvalCompareReport:
@@ -110,9 +121,15 @@ class EvalRunner:
             query_vector = self.comps.embedder.embed_query(gq.query)
         except Exception:
             return EvalResult(
-                query=gq.query, hit=0, mrr=0, recall=0,
-                precision=0, ndcg=0, top_k=kwargs.get("top_k", 5),
-                latency_ms=0, chunks_found=0,
+                query=gq.query,
+                hit=0,
+                mrr=0,
+                recall=0,
+                precision=0,
+                ndcg=0,
+                top_k=kwargs.get("top_k", 5),
+                latency_ms=0,
+                chunks_found=0,
             )
 
         internal_k = kwargs.get("top_k", 5) * 2
@@ -148,6 +165,7 @@ class EvalRunner:
     @classmethod
     def _save_last(cls, report: EvalReport, config: dict | None = None) -> None:
         from datetime import datetime
+
         if cls._last_report is not None:
             cls._prev_report = cls._last_report
         cls._last_report = report
@@ -198,7 +216,7 @@ class EvalRunner:
                     "ndcg": round(er.ndcg, 4),
                     "top_k": er.top_k,
                     "latency_ms": round(er.latency_ms, 1),
-                    "retrieved": er.retrieved_docs[:er.top_k],
+                    "retrieved": er.retrieved_docs[: er.top_k],
                 }
                 for er in r.results
             ],

@@ -5,6 +5,7 @@
   2. 记录索引进度（chunk-level 幂等）
   3. 检测文件变更 + embedding 模型版本变更
 """
+
 import hashlib
 import sqlite3
 from dataclasses import dataclass
@@ -14,18 +15,20 @@ from pathlib import Path
 
 class IndexDecision(Enum):
     """索引决策"""
-    FIRST_INDEX = auto()    # 首次启动，全量索引
-    INCREMENTAL = auto()    # 有文件变更，增量索引
-    RESUME = auto()          # 上次中断，从断点继续
-    REINDEX = auto()         # embedding 模型变更，全量重建
-    SKIP = auto()            # 无变更，跳过
+
+    FIRST_INDEX = auto()  # 首次启动，全量索引
+    INCREMENTAL = auto()  # 有文件变更，增量索引
+    RESUME = auto()  # 上次中断，从断点继续
+    REINDEX = auto()  # embedding 模型变更，全量重建
+    SKIP = auto()  # 无变更，跳过
 
 
 @dataclass
 class IndexState:
     """索引状态快照"""
+
     vault_path: str
-    status: str          # idle|indexing|ready|error
+    status: str  # idle|indexing|ready|error
     doc_count: int
     chunk_count: int
     started_at: str | None
@@ -88,8 +91,7 @@ class IndexManager:
     def get_state(self, vault_path: str) -> IndexState | None:
         """获取索引状态"""
         row = self.db.execute(
-            "SELECT * FROM index_state WHERE vault_path = ?",
-            (vault_path,)
+            "SELECT * FROM index_state WHERE vault_path = ?", (vault_path,)
         ).fetchone()
         if row is None:
             return None
@@ -110,7 +112,7 @@ class IndexManager:
                VALUES (?, 'indexing', datetime('now'))
                ON CONFLICT(vault_path) DO UPDATE SET
                status='indexing', started_at=datetime('now'), error_msg=NULL""",
-            (vault_path,)
+            (vault_path,),
         )
         self.db.commit()
 
@@ -121,7 +123,7 @@ class IndexManager:
                status='ready', doc_count=?, chunk_count=?,
                finished_at=datetime('now')
                WHERE vault_path=?""",
-            (doc_count, chunk_count, vault_path)
+            (doc_count, chunk_count, vault_path),
         )
         self.db.commit()
 
@@ -129,7 +131,7 @@ class IndexManager:
         """标记索引错误"""
         self.db.execute(
             "UPDATE index_state SET status='error', error_msg=? WHERE vault_path=?",
-            (error, vault_path)
+            (error, vault_path),
         )
         self.db.commit()
 
@@ -140,36 +142,31 @@ class IndexManager:
     def is_chunk_embedded(self, chunk_id: str) -> bool:
         """检查 chunk 是否已入库（幂等判断）"""
         row = self.db.execute(
-            "SELECT status FROM chunk_progress WHERE chunk_id=?",
-            (chunk_id,)
+            "SELECT status FROM chunk_progress WHERE chunk_id=?", (chunk_id,)
         ).fetchone()
         return row is not None and row["status"] == "embedded"
 
-    def mark_chunk_pending(self, chunk_id: str, source_file: str,
-                           chunk_index: int, content_hash: str) -> None:
+    def mark_chunk_pending(
+        self, chunk_id: str, source_file: str, chunk_index: int, content_hash: str
+    ) -> None:
         """标记 chunk 待处理"""
         self.db.execute(
             """INSERT OR REPLACE INTO chunk_progress
                (chunk_id, source_file, chunk_index, content_hash,
                 embedding_model, status, created_at)
                VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'))""",
-            (chunk_id, source_file, chunk_index, content_hash, self.embedder_model_name)
+            (chunk_id, source_file, chunk_index, content_hash, self.embedder_model_name),
         )
         self.db.commit()
 
     def mark_chunk_embedded(self, chunk_id: str) -> None:
         """标记 chunk 已入库"""
-        self.db.execute(
-            "UPDATE chunk_progress SET status='embedded' WHERE chunk_id=?",
-            (chunk_id,)
-        )
+        self.db.execute("UPDATE chunk_progress SET status='embedded' WHERE chunk_id=?", (chunk_id,))
         self.db.commit()
 
     def get_pending_chunks(self) -> list[dict]:
         """获取所有待处理的 chunk（断点恢复用）"""
-        rows = self.db.execute(
-            "SELECT * FROM chunk_progress WHERE status='pending'"
-        ).fetchall()
+        rows = self.db.execute("SELECT * FROM chunk_progress WHERE status='pending'").fetchall()
         return [dict(r) for r in rows]
 
     # ============================================================
@@ -220,15 +217,15 @@ class IndexManager:
 
         return changed
 
-    def update_doc_manifest(self, source_file: str,
-                            file_hash: str, file_mtime: float,
-                            chunk_count: int) -> None:
+    def update_doc_manifest(
+        self, source_file: str, file_hash: str, file_mtime: float, chunk_count: int
+    ) -> None:
         """更新文档清单"""
         self.db.execute(
             """INSERT OR REPLACE INTO doc_manifest
                (source_file, file_hash, file_mtime, chunk_count, indexed_at)
                VALUES (?, ?, ?, ?, datetime('now'))""",
-            (source_file, file_hash, file_mtime, chunk_count)
+            (source_file, file_hash, file_mtime, chunk_count),
         )
         self.db.commit()
 

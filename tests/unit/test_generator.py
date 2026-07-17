@@ -1,4 +1,5 @@
 """测试 Generator — Prompt 组装、token 预算、空结果短路、引用注入"""
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -7,8 +8,9 @@ from src.pipeline.generator import Generator
 from src.pipeline.retriever import SearchResult
 
 
-def make_result(content: str, source: str = "test.md",
-                score: float = 0.9, heading: str = "") -> SearchResult:
+def make_result(
+    content: str, source: str = "test.md", score: float = 0.9, heading: str = ""
+) -> SearchResult:
     """快速构造 SearchResult"""
     return SearchResult(
         content=content,

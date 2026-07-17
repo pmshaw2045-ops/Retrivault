@@ -8,6 +8,7 @@ Phase 2: LanceDB 混合搜索（向量 + FTS）+ 结果去重
   - 在 raw_sim 层加分（before rescale_score），不入侵 LanceDB 存储层
   - 每个有意义的查询词命中 +0.10 raw_sim，上限 +0.20
 """
+
 import asyncio
 import math
 from dataclasses import dataclass, field
@@ -33,6 +34,7 @@ def _tokenize(text: str) -> list[str]:
     if has_chinese:
         if _JIEBA_REF is None:
             import jieba
+
             _JIEBA_REF = jieba
         tokens = _JIEBA_REF.lcut(text)
     else:
@@ -85,20 +87,26 @@ class SearchResult:
 
 
 class Retriever:
-
-    def __init__(self, vector_store: VectorStore, default_top_k: int = 5,
-                 similarity_threshold: float = 0.3):
+    def __init__(
+        self, vector_store: VectorStore, default_top_k: int = 5, similarity_threshold: float = 0.3
+    ):
         self.store = vector_store
         self.default_top_k = default_top_k
         self.similarity_threshold = similarity_threshold
 
-    def search(self, query_vector: list[float], query_text: str = "",
-               top_k: int | None = None,
-               similarity_threshold: float | None = None,
-               tag_filter: list[str] | None = None,
-               mode: str = "vector") -> list[SearchResult]:
+    def search(
+        self,
+        query_vector: list[float],
+        query_text: str = "",
+        top_k: int | None = None,
+        similarity_threshold: float | None = None,
+        tag_filter: list[str] | None = None,
+        mode: str = "vector",
+    ) -> list[SearchResult]:
         k = top_k or self.default_top_k
-        threshold = similarity_threshold if similarity_threshold is not None else self.similarity_threshold
+        threshold = (
+            similarity_threshold if similarity_threshold is not None else self.similarity_threshold
+        )
         fetch_k = k * 3 if mode == "hybrid" else k
 
         if mode == "hybrid" and query_text:
@@ -113,22 +121,30 @@ class Retriever:
 
         return results[:k]
 
-    async def search_async(self, query_vector: list[float],
-                            query_text: str = "",
-                            top_k: int | None = None,
-                            similarity_threshold: float | None = None,
-                            tag_filter: list[str] | None = None,
-                            mode: str = "vector") -> list[SearchResult]:
-        return await asyncio.to_thread(self.search, query_vector,
-                                       query_text=query_text,
-                                       top_k=top_k, similarity_threshold=similarity_threshold,
-                                       tag_filter=tag_filter, mode=mode)
+    async def search_async(
+        self,
+        query_vector: list[float],
+        query_text: str = "",
+        top_k: int | None = None,
+        similarity_threshold: float | None = None,
+        tag_filter: list[str] | None = None,
+        mode: str = "vector",
+    ) -> list[SearchResult]:
+        return await asyncio.to_thread(
+            self.search,
+            query_vector,
+            query_text=query_text,
+            top_k=top_k,
+            similarity_threshold=similarity_threshold,
+            tag_filter=tag_filter,
+            mode=mode,
+        )
 
     # ── 内部方法 ──
 
-    def _build_results(self, raw: list[dict], threshold: float,
-                       tag_filter: list[str] | None,
-                       query_text: str = "") -> list[SearchResult]:
+    def _build_results(
+        self, raw: list[dict], threshold: float, tag_filter: list[str] | None, query_text: str = ""
+    ) -> list[SearchResult]:
         query_tokens = _tokenize(query_text) if query_text else []
         results = []
         for r in raw:
@@ -147,6 +163,7 @@ class Retriever:
             chunk_tags = r.get("tags", [])
             if isinstance(chunk_tags, str):
                 import json
+
                 try:
                     chunk_tags = json.loads(chunk_tags)
                 except json.JSONDecodeError:
@@ -155,18 +172,24 @@ class Retriever:
             if tag_filter and not any(t in chunk_tags for t in tag_filter):
                 continue
 
-            results.append(SearchResult(
-                content=r.get("content", ""),
-                source_file=r.get("source_file", ""),
-                heading_path=r.get("heading_path", ""),
-                chunk_index=r.get("chunk_index", 0),
-                chunk_hash=r.get("chunk_hash", ""),
-                score=score,
-                tags=chunk_tags,
-                wikilinks=r.get("wikilinks", []) if not isinstance(r.get("wikilinks"), str) else [],
-                frontmatter=r.get("frontmatter", {}) if not isinstance(r.get("frontmatter"), str) else {},
-                char_count=r.get("char_count", 0),
-            ))
+            results.append(
+                SearchResult(
+                    content=r.get("content", ""),
+                    source_file=r.get("source_file", ""),
+                    heading_path=r.get("heading_path", ""),
+                    chunk_index=r.get("chunk_index", 0),
+                    chunk_hash=r.get("chunk_hash", ""),
+                    score=score,
+                    tags=chunk_tags,
+                    wikilinks=r.get("wikilinks", [])
+                    if not isinstance(r.get("wikilinks"), str)
+                    else [],
+                    frontmatter=r.get("frontmatter", {})
+                    if not isinstance(r.get("frontmatter"), str)
+                    else {},
+                    char_count=r.get("char_count", 0),
+                )
+            )
         return results
 
     @staticmethod

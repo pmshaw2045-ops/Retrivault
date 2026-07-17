@@ -1,4 +1,5 @@
 """测试 ObsidianParser — wikilink/frontmatter/tag/callout/embed 解析"""
+
 from src.pipeline.obsidian_parser import ObsidianParser
 
 

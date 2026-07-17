@@ -3,6 +3,7 @@
 每个步骤作为 Server-Sent Event 推送，前端 EventSource 实时消费。
 事件类型：rewrite / embed / retrieve / rerank / generate / result / error
 """
+
 import json
 import logging
 import os
@@ -47,9 +48,22 @@ def _should_rewrite(query: str) -> bool:
         return False
 
     # 口语化触发词 — 命中任意一个就改写
-    conversational = {"帮我", "请问", "有没有", "怎么", "如何",
-                      "什么", "哪个", "哪些", "为什么", "给", "一下",
-                      "能不能", "是不是", "可否"}
+    conversational = {
+        "帮我",
+        "请问",
+        "有没有",
+        "怎么",
+        "如何",
+        "什么",
+        "哪个",
+        "哪些",
+        "为什么",
+        "给",
+        "一下",
+        "能不能",
+        "是不是",
+        "可否",
+    }
     for w in conversational:
         if w in q:
             return True
@@ -61,7 +75,15 @@ def _should_rewrite(query: str) -> bool:
     return False
 
 
-async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: float, rerank: bool = True, rewrite: bool = True):
+async def _search_events(
+    q: str,
+    top_k: int,
+    mode: str,
+    threshold: float,
+    temp: float,
+    rerank: bool = True,
+    rewrite: bool = True,
+):
     """生成搜索 pipeline 事件序列，每步携带完整详情"""
     comps = get_components()
     t0 = time.time()
@@ -69,8 +91,14 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
     # ── Step 1: Rewrite ──
     search_query = q
     rw_data = {
-        "input": q, "output": q, "rewrites": [], "skipped": True,
-        "duration_ms": 0, "model": "", "system_prompt": "", "user_prompt": "",
+        "input": q,
+        "output": q,
+        "rewrites": [],
+        "skipped": True,
+        "duration_ms": 0,
+        "model": "",
+        "system_prompt": "",
+        "user_prompt": "",
     }
     t1 = time.time()
     if rewrite and _should_rewrite(q):
@@ -83,8 +111,11 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
             if expanded and expanded != q:
                 search_query = expanded
                 rw_data = {
-                    "input": q, "output": search_query, "rewrites": rewrites,
-                    "skipped": False, "model": result.get("model", ""),
+                    "input": q,
+                    "output": search_query,
+                    "rewrites": rewrites,
+                    "skipped": False,
+                    "model": result.get("model", ""),
                     "system_prompt": result.get("system_prompt", ""),
                     "user_prompt": result.get("user_prompt", q),
                     "duration_ms": (time.time() - t1) * 1000,
@@ -93,31 +124,43 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
             pass
         yield _sse("rewrite", {"status": "done", **rw_data})
     else:
-        yield _sse("rewrite", {"status": "skipped", "reason": "rewrite disabled" if not rewrite else "keyword query"})
+        yield _sse(
+            "rewrite",
+            {"status": "skipped", "reason": "rewrite disabled" if not rewrite else "keyword query"},
+        )
 
     # ── Step 2: Embed ──
     yield _sse("embed", {"status": "running", "query": search_query})
     t2 = time.time()
     try:
         query_vector = comps.embedder.embed_query(search_query)
-        yield _sse("embed", {
-            "status": "done", "dims": len(query_vector),
-            "model": comps.embedder.model_name,
-            "query": search_query,
-            "duration_ms": (time.time() - t2) * 1000,
-        })
+        yield _sse(
+            "embed",
+            {
+                "status": "done",
+                "dims": len(query_vector),
+                "model": comps.embedder.model_name,
+                "query": search_query,
+                "duration_ms": (time.time() - t2) * 1000,
+            },
+        )
     except Exception as e:
         yield _sse("embed", {"status": "error", "error": str(e)})
         yield _sse("error", {"message": f"Embedding failed: {e}"})
         return
 
     # ── Step 3: Retrieve ──
-    yield _sse("retrieve", {"status": "running", "mode": mode, "top_k": top_k, "threshold": threshold})
+    yield _sse(
+        "retrieve", {"status": "running", "mode": mode, "top_k": top_k, "threshold": threshold}
+    )
     t3 = time.time()
     results = await comps.retriever.search_async(
-        query_vector, query_text=q,
-        top_k=top_k, similarity_threshold=threshold,
-        tag_filter=None, mode=mode,
+        query_vector,
+        query_text=q,
+        top_k=top_k,
+        similarity_threshold=threshold,
+        tag_filter=None,
+        mode=mode,
     )
     ret_details = [
         {
@@ -129,20 +172,29 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
         }
         for r in results
     ]
-    yield _sse("retrieve", {
-        "status": "done", "chunks_found": len(results),
-        "results": ret_details, "mode": mode,
-        "top_k": top_k, "threshold": threshold,
-        "duration_ms": (time.time() - t3) * 1000,
-    })
+    yield _sse(
+        "retrieve",
+        {
+            "status": "done",
+            "chunks_found": len(results),
+            "results": ret_details,
+            "mode": mode,
+            "top_k": top_k,
+            "threshold": threshold,
+            "duration_ms": (time.time() - t3) * 1000,
+        },
+    )
 
     if not results:
-        yield _sse("result", {
-            "answer": "我的知识库中没有相关信息。",
-            "sources": [],
-            "stats": {"chunks_found": 0},
-            "total_ms": (time.time() - t0) * 1000,
-        })
+        yield _sse(
+            "result",
+            {
+                "answer": "我的知识库中没有相关信息。",
+                "sources": [],
+                "stats": {"chunks_found": 0},
+                "total_ms": (time.time() - t0) * 1000,
+            },
+        )
         return
 
     # ── Step 4: Rerank ──
@@ -166,12 +218,17 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
         except Exception:
             pass
         after_rerank = [(r.source_file.split("/")[-1], round(r.score, 3)) for r in results]
-        yield _sse("rerank", {
-            "status": "done", "applied": reranked,
-            "model": comps.config.rerank.model,
-            "before": before_rerank, "after": after_rerank,
-            "duration_ms": (time.time() - t4) * 1000,
-        })
+        yield _sse(
+            "rerank",
+            {
+                "status": "done",
+                "applied": reranked,
+                "model": comps.config.rerank.model,
+                "before": before_rerank,
+                "after": after_rerank,
+                "duration_ms": (time.time() - t4) * 1000,
+            },
+        )
     else:
         yield _sse("rerank", {"status": "skipped", "applied": False, "reason": "rerank disabled"})
 
@@ -182,7 +239,9 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
     if comps.generator:
         try:
             resp = comps.generator.generate(
-                query=q, results=results, temperature=temp,
+                query=q,
+                results=results,
+                temperature=temp,
             )
             sources = [
                 {
@@ -206,24 +265,33 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
                 else:
                     system_prompt = prompt_text
 
-            yield _sse("generate", {
-                "status": "done",
-                "model": model_name,
-                "temperature": temp,
-                "tokens_used": resp.retrieval_stats.get("tokens_used", 0),
-                "system_prompt": system_prompt,
-                "user_prompt": user_prompt,
-                "duration_ms": (time.time() - t5) * 1000,
-            })
-            yield _sse("result", {
-                "answer": resp.answer,
-                "sources": sources,
-                "stats": resp.retrieval_stats,
-                "total_ms": (time.time() - t0) * 1000,
-            })
+            yield _sse(
+                "generate",
+                {
+                    "status": "done",
+                    "model": model_name,
+                    "temperature": temp,
+                    "tokens_used": resp.retrieval_stats.get("tokens_used", 0),
+                    "system_prompt": system_prompt,
+                    "user_prompt": user_prompt,
+                    "duration_ms": (time.time() - t5) * 1000,
+                },
+            )
+            yield _sse(
+                "result",
+                {
+                    "answer": resp.answer,
+                    "sources": sources,
+                    "stats": resp.retrieval_stats,
+                    "total_ms": (time.time() - t0) * 1000,
+                },
+            )
             return
         except Exception:
-            yield _sse("generate", {"status": "error", "error": "LLM generation failed", "model": model_name})
+            yield _sse(
+                "generate",
+                {"status": "error", "error": "LLM generation failed", "model": model_name},
+            )
 
     # No LLM — retrieval only
     yield _sse("generate", {"status": "skipped", "reason": "LLM unavailable", "model": ""})
@@ -237,14 +305,16 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
         }
         for i, r in enumerate(results)
     ]
-    yield _sse("result", {
-        "answer": "（LLM 未配置）\n\n" + "\n---\n".join(
-            f"[{i+1}] {s['preview']}" for i, s in enumerate(sources)
-        ),
-        "sources": sources,
-        "stats": {"chunks_found": len(results)},
-        "total_ms": (time.time() - t0) * 1000,
-    })
+    yield _sse(
+        "result",
+        {
+            "answer": "（LLM 未配置）\n\n"
+            + "\n---\n".join(f"[{i+1}] {s['preview']}" for i, s in enumerate(sources)),
+            "sources": sources,
+            "stats": {"chunks_found": len(results)},
+            "total_ms": (time.time() - t0) * 1000,
+        },
+    )
 
 
 @router.get("/search/stream")

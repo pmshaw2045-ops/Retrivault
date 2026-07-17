@@ -5,6 +5,7 @@ Hit Rate@k, MRR, NDCG@k, Recall@k, Precision@k
 所有指标基于文档级匹配（relevant_docs）。
 如果金标数据集有 chunk 标注，可切换为 chunk 级匹配。
 """
+
 import math
 
 
