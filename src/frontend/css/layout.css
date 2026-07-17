@@ -1,0 +1,342 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ═══════════════════════════════════════════
+   Layout — Obsidian 风格整体布局
+   ═══════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  background: var(--bg-root);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* ═══ 统一 Header（两页完全一致） ═══ */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 40px;
+  height: 90px;
+  width: 100%;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1120px;
+  gap: 16px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.header-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.header-brand {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -.5px;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.settings-wrap {
+  position: relative;
+}
+
+.settings-wrap .dropdown-menu {
+  display: none;
+}
+
+/* ── Header 搜索框（仅结果页） ── */
+.header-search {
+  display: flex;
+  align-items: stretch;
+  flex: 1;
+  max-width: 520px;
+  background: rgb(38, 38, 38);
+  border-radius: 9999px;
+  overflow: hidden;
+  transition: background 150ms ease;
+}
+
+.header-search:focus-within {
+  background: rgb(48, 48, 48);
+}
+
+.header-search input {
+  flex: 1;
+  padding: 0 16px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.header-search input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.header-search-btn {
+  width: 56px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 150ms ease;
+}
+
+.header-search-btn:hover {
+  color: var(--text-primary);
+}
+
+/* ═══ 首页 — 居中搜索 ═══ */
+#page-home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+}
+
+.search-area-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+  max-width: 1120px;
+}
+
+.search-box {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  overflow: hidden;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.search-box:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-muted);
+}
+
+.search-box input {
+  flex: 1;
+  padding: 0 20px;
+  height: 46px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  outline: none;
+  line-height: 46px;
+}
+
+.search-box .btn-search {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 108px;
+  height: 46px;
+  background: var(--accent);
+  border: none;
+  border-radius: 0 10px 10px 0;
+  color: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: 500;
+  gap: 6px;
+  transition: background 150ms ease;
+}
+
+.search-box .btn-search:hover {
+  background: var(--accent-hover);
+}
+
+.search-tagline {
+  margin-top: 18px;
+  text-align: center;
+  width: 100%;
+  user-select: none;
+}
+
+.tagline-main {
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.tagline-desc {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 1.7;
+  max-width: 800px;
+  margin: 0 auto 8px auto;
+  word-break: keep-all;
+}
+
+.tagline-sub {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  opacity: .7;
+}
+
+/* ═══ 结果页 ═══ */
+#page-results {
+  display: none;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+}
+
+#results-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  justify-content: center;
+  position: relative;
+}
+
+#results-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 0;
+  max-width: 1120px;
+}
+
+#results-main #search-results {
+  max-width: 100%;
+}
+
+/* ── Console: DevTools 固定右侧 ── */
+#results-console {
+  position: fixed;
+  right: 0;
+  top: 90px;
+  bottom: 0;
+  width: 420px;
+  background: var(--console-bg);
+  border-left: 2px solid var(--console-border);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  overflow: hidden;
+  z-index: 100;
+  transition: width 300ms ease, min-width 300ms ease, padding 300ms ease, border 300ms ease, opacity 300ms ease;
+}
+
+#results-console.collapsed {
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  border-left: none;
+  opacity: 0;
+}
+
+#results-console.collapsed #console-header-bar,
+#results-console.collapsed #console-lines {
+  display: none;
+}
+
+#console-expand {
+  position: fixed;
+  right: 0;
+  top: 100px;
+  width: 20px;
+  height: 80px;
+  background: var(--console-bg);
+  border: 1px solid var(--console-border);
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  color: var(--console-dim);
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 101;
+  transition: background 150ms ease;
+  user-select: none;
+}
+
+#console-expand:hover {
+  background: #1c2129;
+  color: var(--console-text);
+}
+
+#console-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  color: var(--console-dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  background: var(--console-header-bg);
+  border-bottom: 1px solid var(--console-border);
+  flex-shrink: 0;
+}
+
+.console-total-ms {
+  color: var(--text-tertiary);
+  font-size: 10px;
+}
+
+#console-lines {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 10px;
+  line-height: 1.7;
+}
+
+/* 小屏：console 自动收起，展开按钮更明显 */
+@media (max-width: 1400px) {
+  #results-console:not(.collapsed) {
+    width: 340px;
+  }
+}

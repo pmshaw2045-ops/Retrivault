@@ -1,0 +1,32 @@
+# 示例金标数据集 — 基于 docs/samples/ 的 6 篇示例文档
+name: "rag-samples"
+queries:
+  - query: "RAG的核心原理是什么"
+    relevant_docs:
+      - "01-rag-basics.md"
+    description: "应召回RAG基础知识文档"
+
+  - query: "Agent架构有哪些核心组件"
+    relevant_docs:
+      - "02-agent-architecture.md"
+    description: "应召回Agent架构选型指南"
+
+  - query: "BGE-M3和其他Embedding模型比怎么样"
+    relevant_docs:
+      - "03-embedding-guide.md"
+    description: "应召回Embedding模型选型指南"
+
+  - query: "推荐用什么向量数据库"
+    relevant_docs:
+      - "04-vector-db-comparison.md"
+    description: "应召回向量数据库对比文档"
+
+  - query: "Obsidian入门用法"
+    relevant_docs:
+      - "05-obsidian-workflow.md"
+    description: "应召回Obsidian工作流文档"
+
+  - query: "RAG中Prompt设计的要点"
+    relevant_docs:
+      - "06-prompt-engineering.md"
+    description: "应召回Prompt工程文档"

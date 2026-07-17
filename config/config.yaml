@@ -1,0 +1,48 @@
+# ============================================================
+# 业务配置 — 进 Git，团队共享基线
+# ============================================================
+# 修改方式：直接编辑此文件，或通过 UI 面板实时调整（UI 设置会持久化到 data/rag.db）
+# Secrets（API Key、vault 路径）请放在 .env 中
+
+# ---------- RAG 参数 ----------
+rag:
+  chunk_size: 1024          # 分块大小（字符数）— 每chunk ~200-300 tokens
+  chunk_overlap: 128        # 相邻 chunk 重叠（字符数）
+  top_k: 5                 # 检索返回的 Top-K 数量
+  similarity_threshold: 0.1  # 0-1，低于此值的 chunk 被过滤
+
+# ---------- LLM ----------
+llm:
+  model: deepseek-v4-pro   # DeepSeek API 模型名
+  temperature: 0.3         # 0-1.0，越低越确定
+  max_tokens: 2048         # 回答最大 token 数
+
+# ---------- Embedding ----------
+embedding:
+  provider: api           # local | api
+  model: BAAI/bge-m3
+  base_url: https://api.siliconflow.cn/v1
+  batch_size: 32
+
+# ---------- 重排（Phase 2） ----------
+rerank:
+  enabled: true
+  provider: api
+  model: BAAI/bge-reranker-v2-m3
+  base_url: https://api.siliconflow.cn/v1
+
+# ---------- Query 改写（3 路改写 + 查询扩展） ----------
+rewrite:
+  enabled: true
+  model: deepseek-v4-flash
+  base_url: https://api.deepseek.com/v1
+
+# ---------- 搜索 ----------
+search:
+  mode: hybrid             # vector | hybrid — hybrid 混合搜索（向量+FTS）效果更佳
+  rerank_enabled: true     # BGE-Reranker 重排
+
+# ---------- 路径 ----------
+paths:
+  lancedb_dir: data/lancedb
+  sqlite_db: data/rag.db

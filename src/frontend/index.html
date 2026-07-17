@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retrivault</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/layout.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="icon" href="/static/icon.png" type="image/png">
+</head>
+<body>
+
+  <!-- ═══ 首页 — 居中搜索 ═══ -->
+  <div id="page-home">
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="header-left">
+          <img src="/static/icon.png" alt="" class="header-icon" onerror="this.style.display='none'">
+          <span class="header-brand">Retrivault</span>
+        </div>
+        <div class="header-right">
+          <div class="settings-wrap">
+            <button class="btn-icon" title="设置">
+              <span class="settings-text">设置</span>
+            </button>
+            <div class="dropdown-menu">
+              <div class="dropdown-item" onclick="openModal('modal-params')">参数设置</div>
+              <div class="dropdown-item" onclick="openModal('modal-index')">重建索引</div>
+              <div class="dropdown-item" onclick="openEvalPage()">评估观测</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div id="home-search-area" class="search-area-center">
+      <div class="search-box">
+        <input id="search-input" type="text" placeholder="搜索你的知识库…" autofocus>
+        <button class="btn-search" onclick="doSearch()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          搜索
+        </button>
+      </div>
+      <div class="search-tagline">
+        <div class="tagline-main">自然语言探索你的知识库 · AI 精准回答 · 每一步都透明可见</div>
+        <div class="tagline-desc">连接你的 Obsidian 知识库，用自然语言提问即可快速检索相关笔记。AI 基于检索到的内容生成准确回答，并标注引用来源，确保每句话都有据可查。从改写、向量化到生成，每条管线的运行细节都在右侧实时呈现，没有黑箱。</div>
+        <div class="tagline-sub">支持 DeepSeek · OpenAI · Ollama · 本地 Embedding · LanceDB 向量引擎 · 内置 RAG 评估体系</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 搜索结果页 ═══ -->
+  <div id="page-results" style="display:none;">
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="header-left">
+          <img src="/static/icon.png" alt="" class="header-icon" onerror="this.style.display='none'">
+          <span class="header-brand">Retrivault</span>
+        </div>
+        <div class="header-search">
+          <input id="rt-search-input" type="text" placeholder="搜索你的知识库…"
+                 onkeydown="if(event.key==='Enter')doSearchFromResults()">
+          <button class="header-search-btn" onclick="doSearchFromResults()">搜索</button>
+        </div>
+        <div class="header-right">
+          <div class="settings-wrap">
+            <button class="btn-icon" title="设置">
+              <span class="settings-text">设置</span>
+            </button>
+            <div class="dropdown-menu">
+              <div class="dropdown-item" onclick="openModal('modal-params')">参数设置</div>
+              <div class="dropdown-item" onclick="openModal('modal-index')">重建索引</div>
+              <div class="dropdown-item" onclick="openEvalPage()">评估观测</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div id="results-body">
+      <div id="results-main">
+        <div id="search-results"></div>
+      </div>
+      <div id="results-console">
+        <div id="console-header-bar">
+          <span style="display:flex;align-items:center;gap:8px;">
+            <span id="console-collapse" style="cursor:pointer;user-select:none;font-size:10px;">▶</span>
+            <span>Pipeline</span>
+          </span>
+          <span class="console-total-ms" id="console-total-ms"></span>
+        </div>
+        <div id="console-lines"></div>
+      </div>
+      <div id="console-expand" style="display:none;" onclick="expandConsole()">◀</div>
+    </div>
+  </div>
+
+  <!-- ══ Modals ══ -->
+  <div class="modal-overlay" id="modal-overlay"></div>
+
+  <div class="modal" id="modal-params">
+    <div class="modal-header">
+      <span>参数设置</span>
+      <span class="modal-close" onclick="closeModal('modal-params')">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="config-row">
+        <label>Top‑K</label>
+        <div class="config-range">
+          <input type="range" id="cfg-topk" min="1" max="20" value="5">
+          <span class="range-val">5</span>
+        </div>
+      </div>
+      <div class="config-row">
+        <label>Mode</label>
+        <select id="cfg-mode">
+          <option value="vector">vector</option>
+          <option value="hybrid">hybrid</option>
+        </select>
+      </div>
+      <div class="config-row">
+        <label>Temperature</label>
+        <div class="config-range">
+          <input type="range" id="cfg-temp" min="0" max="1" step=".05" value=".3">
+          <span class="range-val">.30</span>
+        </div>
+      </div>
+      <div class="config-row">
+        <label>Threshold</label>
+        <div class="config-range">
+          <input type="range" id="cfg-threshold" min="0" max="1" step=".05" value="0">
+          <span class="range-val">.00</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-params')">取消</button>
+      <button class="btn btn-primary" onclick="confirmParams();closeModal('modal-params')">确认</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-index">
+    <div class="modal-header">
+      <span>重建索引</span>
+      <span class="modal-close" onclick="closeModal('modal-index')">&times;</span>
+    </div>
+    <div class="modal-body" id="index-body">
+      <div id="index-status-pre">
+        <p style="color:var(--text-secondary);margin-bottom:16px;">从当前源文件重建全部索引，可能需要几分钟。</p>
+        <button class="btn btn-primary" id="btn-start-index" onclick="startReindex()">开始重建</button>
+      </div>
+      <div id="index-status-progress" style="display:none;">
+        <div class="progress-block">
+          <div class="progress-label">扫描文档</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" id="progress-scan" style="width:0%"></div>
+          </div>
+          <div class="progress-text" id="progress-scan-text">0 / 0</div>
+        </div>
+        <div class="progress-block">
+          <div class="progress-label">向量化</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" id="progress-embed" style="width:0%"></div>
+          </div>
+          <div class="progress-text" id="progress-embed-text">0 / 0</div>
+        </div>
+        <div class="index-status-msg" id="index-status-msg">准备中…</div>
+      </div>
+      <div id="index-status-done" style="display:none;">
+        <div class="index-done-icon">✅</div>
+        <div class="index-done-summary" id="index-done-summary"></div>
+      </div>
+    </div>
+    <div class="modal-footer" id="index-footer">
+      <span></span>
+      <button class="btn btn-primary" id="btn-index-done" style="display:none;" onclick="closeModal('modal-index')">OK</button>
+    </div>
+  </div>
+
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/search.js"></script>
+  <script src="/static/js/config.js"></script>
+
+  <script>
+    ['cfg-topk','cfg-temp','cfg-threshold'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('input', function() {
+        this.parentElement.querySelector('.range-val').textContent = parseFloat(this.value).toFixed(2);
+      });
+    });
+
+    document.addEventListener('click', function(e) {
+      var sw = e.target.closest('.settings-wrap');
+      document.querySelectorAll('.settings-wrap').forEach(function(w) {
+        var menu = w.querySelector('.dropdown-menu');
+        if (w === sw) {
+          menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        } else {
+          menu.style.display = 'none';
+        }
+      });
+    });
+
+    document.getElementById('modal-overlay').addEventListener('click', function() {
+      var idxBody = document.getElementById('index-body');
+      if (idxBody && idxBody.querySelector('#index-status-progress').style.display === 'block') return;
+      closeModal('modal-params');
+    });
+
+    function openModal(id) {
+      document.querySelectorAll('.dropdown-menu').forEach(function(m) { m.style.display = 'none'; });
+      document.getElementById('modal-overlay').style.display = 'block';
+      document.getElementById(id).style.display = 'block';
+      if (id === 'modal-params') loadCurrentParams();
+    }
+
+    function closeModal(id) {
+      document.getElementById('modal-overlay').style.display = 'none';
+      var el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    }
+
+    function openEvalPage() {
+      window.open('/eval', '_blank');
+    }
+
+    function loadCurrentParams() {
+      var s = getStoredParams();
+      document.getElementById('cfg-topk').value = s.top_k;
+      document.getElementById('cfg-topk').parentElement.querySelector('.range-val').textContent = s.top_k;
+      document.getElementById('cfg-mode').value = s.mode;
+      document.getElementById('cfg-temp').value = s.temperature;
+      document.getElementById('cfg-temp').parentElement.querySelector('.range-val').textContent = parseFloat(s.temperature).toFixed(2);
+      document.getElementById('cfg-threshold').value = s.similarity_threshold;
+      document.getElementById('cfg-threshold').parentElement.querySelector('.range-val').textContent = parseFloat(s.similarity_threshold).toFixed(2);
+    }
+
+    function confirmParams() {
+      var p = {
+        top_k: parseInt(document.getElementById('cfg-topk').value),
+        mode: document.getElementById('cfg-mode').value,
+        temperature: parseFloat(document.getElementById('cfg-temp').value),
+        similarity_threshold: parseFloat(document.getElementById('cfg-threshold').value),
+      };
+      sessionStorage.setItem('rag_params', JSON.stringify(p));
+    }
+
+    function getStoredParams() {
+      var stored = sessionStorage.getItem('rag_params');
+      if (stored) { try { return JSON.parse(stored); } catch(e) {} }
+      return { top_k: 5, mode: 'hybrid', temperature: 0.3, similarity_threshold: 0.1 };
+    }
+  </script>
+
+</body>
+</html>

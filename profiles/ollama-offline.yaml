@@ -1,0 +1,18 @@
+# Provider 组合：LanceDB + Ollama + BGE-M3 本地（完全离线）
+profile_name: "离线模式"
+description: "完全离线：本地 LLM + 本地 Embedding。需要安装 Ollama。"
+
+vector_store:
+  provider: lance
+  db_path: data/lancedb
+
+llm:
+  provider: ollama
+  model: qwen2.5:7b
+  api_base: http://localhost:11434/v1
+  # Ollama 本地服务，不需要 API Key
+
+embedding:
+  provider: local_bge
+  model: BAAI/bge-m3
+  device: cpu

@@ -1,0 +1,18 @@
+# 硅基流动 — 国产 Embedding API，零本地模型下载
+profile_name: "硅基流动"
+description: "使用硅基流动 API 做 Embedding，无需下载 2.2GB 本地模型。"
+
+vector_store:
+  provider: lance
+  db_path: data/lancedb
+
+llm:
+  provider: deepseek
+  model: deepseek-v4-pro
+  api_base: https://api.deepseek.com/v1
+
+embedding:
+  provider: api
+  base_url: https://api.siliconflow.cn/v1
+  model: BAAI/bge-m3
+  # API Key 从 .env 的 EMBEDDING_API_KEY 读取

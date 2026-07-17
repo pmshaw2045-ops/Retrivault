@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retrivault · Eval</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/layout.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  <link rel="icon" href="/static/icon.png" type="image/png">
+  <style>
+    body { overflow-y: auto; height: auto; min-height: 100vh; }
+    #eval-content { max-width: 1120px; margin: 0 auto; padding: 32px 0; width: 100%; }
+    .eval-header-info { display: flex; align-items: center; gap: 16px; }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-left">
+        <img src="/static/icon.png" alt="" class="header-icon" onerror="this.style.display='none'">
+        <span class="header-brand">Eval RAG 评测面板</span>
+      </div>
+      <div class="header-right">
+        <div class="eval-header-info">
+          <span class="eval-last-run" id="eval-last-time"></span>
+          <button class="btn btn-primary" id="btn-run-eval" onclick="runEval()">
+            <span id="btn-eval-text">运行评测</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div id="eval-content">
+
+    <div id="eval-loading" style="display:none;">
+      <div class="spinner"></div>
+      <p style="margin-top:16px;">评测执行中…</p>
+    </div>
+
+    <div id="eval-empty" class="eval-empty">
+      <div style="font-size:48px;margin-bottom:16px;">📊</div>
+      <p>尚无评测数据</p>
+      <p style="font-size:13px;">点击「运行评测」开始评估你的 RAG 检索质量</p>
+    </div>
+
+    <div id="eval-result-area" style="display:none;">
+      <div class="eval-grid" id="eval-metrics"></div>
+      <div class="section-title">详情</div>
+      <table class="eval-table" id="eval-table">
+        <thead>
+          <tr>
+            <th>Query</th>
+            <th style="width:60px;text-align:center;">Hit</th>
+            <th style="width:80px;text-align:center;">MRR</th>
+            <th style="width:80px;text-align:center;">R@5</th>
+            <th style="width:80px;text-align:center;">延迟</th>
+          </tr>
+        </thead>
+        <tbody id="eval-table-body"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/eval.js"></script>
+</body>
+</html>

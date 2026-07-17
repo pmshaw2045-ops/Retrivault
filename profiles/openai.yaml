@@ -1,0 +1,19 @@
+# Provider 组合：LanceDB + OpenAI + OpenAI Embedding
+profile_name: "OpenAI"
+description: "全 OpenAI 技术栈，适合已有 OpenAI API Key 的用户。"
+
+vector_store:
+  provider: lance
+  db_path: data/lancedb
+
+llm:
+  provider: openai
+  model: gpt-4o
+  api_base: https://api.openai.com/v1
+  # API Key 从 .env 的 LLM_API_KEY 读取
+
+embedding:
+  provider: openai
+  model: text-embedding-3-small
+  dimensions: 1536
+  # API Key 从 .env 的 LLM_API_KEY 读取

@@ -1,0 +1,18 @@
+# Provider 组合：LanceDB + DeepSeek + BGE-M3 本地（默认）
+profile_name: "默认"
+description: "零费用组合：本地 Embedding + DeepSeek API。适合大多数用户。"
+
+vector_store:
+  provider: lance
+  db_path: data/lancedb
+
+llm:
+  provider: deepseek
+  model: deepseek-v4-pro
+  api_base: https://api.deepseek.com/v1
+  # API Key 从 .env 的 LLM_API_KEY 读取
+
+embedding:
+  provider: local_bge
+  model: BAAI/bge-m3
+  device: cpu

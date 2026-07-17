@@ -1,0 +1,79 @@
+/* ═══════════════════════════════════════════
+   Design Tokens — Obsidian 风格
+   深色页面 + 紫色调 + 高可读性
+   ═══════════════════════════════════════════ */
+
+:root {
+  /* ── Accent (Obsidian Purple) ── */
+  --accent:        #7c3aed;
+  --accent-hover:  #6d28d9;
+  --accent-muted:  rgba(124, 58, 237, 0.12);
+
+  /* ── Surfaces (Obsidian Dark) ── */
+  --bg-root:       #0f0f0f;
+  --bg-surface:    #1a1a1a;
+  --bg-raised:     #222222;
+  --bg-overlay:    rgba(255, 255, 255, 0.04);
+
+  /* ── Console (统一深色面板) ── */
+  --console-bg:        #262626;
+  --console-header-bg: #1e1e1e;
+  --console-border:    #21262d;
+  --console-text:      #d4d4d4;
+  --console-dim:       #666666;
+  --console-detail-bg: #0a0e14;
+  --console-pre-bg:    #06090d;
+
+  /* ── Source Card ── */
+  --card-bg:       #141414;
+  --card-border:   #2a2a2a;
+  --card-radius:   8px;
+
+  /* ── Text ── */
+  --text-primary:  #eeeeee;
+  --text-secondary:#999999;
+  --text-tertiary: #666666;
+  --text-link:     var(--accent);
+
+  /* ── Border ── */
+  --border:        #363636;
+  --border-light:  #2a2a2a;
+
+  /* ── Semantic ── */
+  --ok:            #22c55e;
+  --warn:          #eab308;
+  --err:           #ef4444;
+
+  /* ── Typography (Obsidian font stack) ── */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system,
+               'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+               'Noto Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code',
+               'Cascadia Code', monospace;
+
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+
+  /* ── Spacing ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* ── Radius ── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  /* ── Shadow ── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, .3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, .4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, .5);
+}
