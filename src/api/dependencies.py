@@ -154,7 +154,10 @@ def get_components() -> AppComponents:
 def _resolve_vault_path() -> str:
     path = os.getenv("OBSIDIAN_VAULT_PATH", "")
     if path:
-        return str(Path(path).expanduser().resolve())
+        resolved = Path(path).expanduser().resolve()
+        if resolved.exists():
+            return str(resolved)
+    # fallback: 未配置或路径不存在 → 使用示例文档
     samples = Path(__file__).resolve().parent.parent.parent / "docs" / "samples"
     if samples.exists():
         return str(samples)
