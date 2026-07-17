@@ -1,4 +1,4 @@
-.PHONY: help start test lint clean install
+.PHONY: help start test lint clean install setup-dev
 
 help: ## 显示帮助信息
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
