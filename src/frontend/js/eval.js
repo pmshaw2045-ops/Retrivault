@@ -76,9 +76,11 @@ function renderEvalResults(data) {
   var cfg = data.config || {};
   configInfo.textContent = cfg.mode ? '模式=' + cfg.mode + ' · K=' + cfg.top_k + ' · 阈值=' + cfg.threshold : '';
 
-  // Metric cards with delta
+  // Metric cards with delta — 兼容新旧字段名
   var m = data.metrics || {};
   var d = data.deltas || {};
+  function _m(key, fallback) { return (m[key] !== undefined ? m[key] : m[fallback]) || 0; }
+  function _d(key, fallback) { return d[key] !== undefined ? d[key] : d[fallback]; }
   metrics.innerHTML = [
     { key: 'hit_rate', label: 'Hit Rate', fmt: function(v) { return (v * 100).toFixed(0) + '%'; } },
     { key: 'mrr', label: 'MRR', fmt: function(v) { return v.toFixed(2); } },
@@ -86,8 +88,8 @@ function renderEvalResults(data) {
     { key: 'recall', label: 'Recall@' + topK, fmt: function(v) { return (v * 100).toFixed(0) + '%'; } },
     { key: 'ndcg', label: 'NDCG@' + topK, fmt: function(v) { return v.toFixed(2); } },
   ].map(function(item) {
-    var val = (m[item.key] || 0);
-    var delta = d[item.key];
+    var val = _m(item.key, item.key + '@5');
+    var delta = _d(item.key, item.key + '@5');
     var deltaHtml = '';
     if (delta !== null && delta !== undefined) {
       if (delta === 0) {
@@ -136,13 +138,16 @@ function renderEvalResults(data) {
   tableBody.innerHTML = details.map(function(d) {
     var hitClass = d.hit ? 'eval-hit' : 'eval-miss';
     var hitIcon = d.hit ? '✓' : '✗';
+    var p = d.precision !== undefined ? d.precision : d['precision@5'];
+    var r = d.recall !== undefined ? d.recall : d['recall@5'];
+    var n = d.ndcg !== undefined ? d.ndcg : d['ndcg@5'];
     return '<tr>' +
       '<td>' + esc(d.query) + '</td>' +
       '<td style="text-align:center;"><span class="' + hitClass + '">' + hitIcon + '</span></td>' +
       '<td style="text-align:center;font-family:var(--font-mono);">' + (d.mrr || 0).toFixed(2) + '</td>' +
-      '<td style="text-align:center;font-family:var(--font-mono);">' + ((d.precision || 0) * 100).toFixed(0) + '%</td>' +
-      '<td style="text-align:center;font-family:var(--font-mono);">' + ((d.recall || 0) * 100).toFixed(0) + '%</td>' +
-      '<td style="text-align:center;font-family:var(--font-mono);">' + (d.ndcg || 0).toFixed(2) + '</td>' +
+      '<td style="text-align:center;font-family:var(--font-mono);">' + ((p || 0) * 100).toFixed(0) + '%</td>' +
+      '<td style="text-align:center;font-family:var(--font-mono);">' + ((r || 0) * 100).toFixed(0) + '%</td>' +
+      '<td style="text-align:center;font-family:var(--font-mono);">' + (n || 0).toFixed(2) + '</td>' +
       '<td style="text-align:center;font-family:var(--font-mono);color:var(--text-tertiary);">' + (d.latency_ms || 0).toFixed(0) + 'ms</td>' +
       '</tr>';
   }).join('');
