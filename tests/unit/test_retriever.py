@@ -124,7 +124,7 @@ class TestTagFilter:
         """tag_filter 正确过滤"""
         retriever = Retriever(populated_store, similarity_threshold=0.0)
         results = retriever.search(
-            [0.0, 0.0, 0.0, 0.0], top_k=5,
+            [0.1, 0.2, 0.3, 0.4], top_k=5,
             tag_filter=["#agent"]
         )
         assert len(results) == 1
@@ -143,7 +143,7 @@ class TestTagFilter:
         """多标签 OR 过滤"""
         retriever = Retriever(populated_store, similarity_threshold=0.0)
         results = retriever.search(
-            [0.0, 0.0, 0.0, 0.0], top_k=5,
+            [0.1, 0.2, 0.3, 0.4], top_k=5,
             tag_filter=["#rag", "#python"]
         )
         assert len(results) >= 1  # 至少匹配 rag 或 python

@@ -77,7 +77,7 @@ class TestLanceDBBasic:
     def test_search_respects_top_k(self, temp_store, sample_chunks):
         """top_k 限制生效"""
         temp_store.add_chunks(sample_chunks)
-        results = temp_store.search([0.0, 0.0, 0.0, 0.0], top_k=1)
+        results = temp_store.search([0.1, 0.2, 0.3, 0.4], top_k=1)
         assert len(results) == 1
 
     def test_search_metadata(self, temp_store, sample_chunks):
