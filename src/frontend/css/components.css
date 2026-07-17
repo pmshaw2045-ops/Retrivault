@@ -499,6 +499,17 @@
   margin-top: var(--space-1);
 }
 
+.eval-delta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin-top: 4px;
+  color: var(--text-tertiary);
+}
+.eval-delta.eval-delta-up { color: #4ade80; }
+.eval-delta.eval-delta-up::before { content: "↑ "; }
+.eval-delta.eval-delta-down { color: #f87171; }
+.eval-delta.eval-delta-down::before { content: "↓ "; }
+
 .eval-table {
   width: 100%;
   border-collapse: collapse;

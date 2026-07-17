@@ -1,5 +1,4 @@
 /* Eval Dashboard */
-
 var _isRunning = false;
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -12,9 +11,7 @@ async function loadLastEval() {
     if (data && data.has_data) {
       renderEvalResults(data);
     }
-  } catch(e) {
-    // 首次无数据，空状态已展示
-  }
+  } catch(e) {}
 }
 
 async function runEval() {
@@ -35,7 +32,6 @@ async function runEval() {
 
   try {
     var data = await apiEval('hybrid', 5, 0.1);
-    // 等待一下让后端保存 last
     await sleep(500);
     var last = await apiEvalLast();
     if (last && last.has_data) {
@@ -58,30 +54,63 @@ function renderEvalResults(data) {
   var metrics = document.getElementById('eval-metrics');
   var tableBody = document.getElementById('eval-table-body');
   var lastTime = document.getElementById('eval-last-time');
+  var configInfo = document.getElementById('eval-config-info');
+  var badcase = document.getElementById('eval-badcase');
 
-  // 隐藏空状态，显示结果
   empty.style.display = 'none';
   result.style.display = 'block';
 
-  // 上次评测时间
-  if (data.run_at) {
-    lastTime.textContent = '上次: ' + data.run_at;
-  }
+  // 评测时间
+  if (data.run_at) lastTime.textContent = '上次: ' + data.run_at;
 
-  // Metric cards
+  // 配置信息
+  var cfg = data.config || {};
+  configInfo.textContent = cfg.mode ? [cfg.mode, 'k=' + cfg.top_k, 'th=' + cfg.threshold].join(' · ') : '';
+
+  // Metric cards with delta
   var m = data.metrics || {};
+  var d = data.deltas || {};
   metrics.innerHTML = [
-    { label: 'Hit Rate', value: ((m.hit_rate || 0) * 100).toFixed(0) + '%' },
-    { label: 'MRR', value: (m.mrr || 0).toFixed(2) },
-    { label: 'Precision@5', value: ((m['precision@5'] || 0) * 100).toFixed(0) + '%' },
-    { label: 'Recall@5', value: ((m['recall@5'] || 0) * 100).toFixed(0) + '%' },
-    { label: 'NDCG@5', value: (m['ndcg@5'] || 0).toFixed(2) },
+    { key: 'hit_rate', label: 'Hit Rate', fmt: function(v) { return (v * 100).toFixed(0) + '%'; } },
+    { key: 'mrr', label: 'MRR', fmt: function(v) { return v.toFixed(2); } },
+    { key: 'precision@5', label: 'Precision@5', fmt: function(v) { return (v * 100).toFixed(0) + '%'; } },
+    { key: 'recall@5', label: 'Recall@5', fmt: function(v) { return (v * 100).toFixed(0) + '%'; } },
+    { key: 'ndcg@5', label: 'NDCG@5', fmt: function(v) { return v.toFixed(2); } },
   ].map(function(item) {
-    return '<div class="eval-card"><div class="eval-value">' + item.value + '</div><div class="eval-label">' + item.label + '</div></div>';
+    var val = (m[item.key] || 0);
+    var delta = d[item.key];
+    var deltaHtml = '';
+    if (delta !== null && delta !== undefined) {
+      var cls = delta > 0 ? 'eval-delta-up' : (delta < 0 ? 'eval-delta-down' : '');
+      var sign = delta > 0 ? '+' : '';
+      deltaHtml = '<div class="eval-delta ' + cls + '">' + sign + (delta * 100).toFixed(1) + '%</div>';
+    }
+    return '<div class="eval-card">' +
+      '<div class="eval-value">' + item.fmt(val) + '</div>' +
+      '<div class="eval-label">' + item.label + '</div>' +
+      deltaHtml +
+      '</div>';
   }).join('');
 
-  // Detail table
+  // Bad case 聚合
   var details = data.details || [];
+  var misses = details.filter(function(d) { return !d.hit; });
+  var lowMrr = details.filter(function(d) { return d.hit && d.mrr < 0.5; });
+  if (misses.length > 0 || lowMrr.length > 0) {
+    badcase.style.display = 'block';
+    var html = '<div class="eval-badcase-title">⚠️ 需要关注的查询</div>';
+    misses.forEach(function(d) {
+      html += '<div class="eval-badcase-item"><span class="bci-tag miss">未命中</span>' + esc(d.query) + '</div>';
+    });
+    lowMrr.forEach(function(d) {
+      html += '<div class="eval-badcase-item"><span class="bci-tag low">低排序</span> ' + esc(d.query) + ' <span style="color:var(--text-tertiary);font-size:12px;">MRR=' + d.mrr.toFixed(2) + '</span></div>';
+    });
+    badcase.innerHTML = html;
+  } else {
+    badcase.style.display = 'none';
+  }
+
+  // Detail table
   tableBody.innerHTML = details.map(function(d) {
     var hitClass = d.hit ? 'eval-hit' : 'eval-miss';
     var hitIcon = d.hit ? '✓' : '✗';
@@ -89,7 +118,9 @@ function renderEvalResults(data) {
       '<td>' + esc(d.query) + '</td>' +
       '<td style="text-align:center;"><span class="' + hitClass + '">' + hitIcon + '</span></td>' +
       '<td style="text-align:center;font-family:var(--font-mono);">' + (d.mrr || 0).toFixed(2) + '</td>' +
+      '<td style="text-align:center;font-family:var(--font-mono);">' + ((d['precision@5'] || 0) * 100).toFixed(0) + '%</td>' +
       '<td style="text-align:center;font-family:var(--font-mono);">' + ((d['recall@5'] || 0) * 100).toFixed(0) + '%</td>' +
+      '<td style="text-align:center;font-family:var(--font-mono);">' + (d['ndcg@5'] || 0).toFixed(2) + '</td>' +
       '<td style="text-align:center;font-family:var(--font-mono);color:var(--text-tertiary);">' + (d.latency_ms || 0).toFixed(0) + 'ms</td>' +
       '</tr>';
   }).join('');

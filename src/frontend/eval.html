@@ -11,7 +11,15 @@
   <style>
     body { overflow-y: auto; height: auto; min-height: 100vh; }
     #eval-content { max-width: 1120px; margin: 0 auto; padding: 32px 0; width: 100%; }
-    .eval-header-info { display: flex; align-items: center; gap: 16px; }
+    .eval-header-info { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .eval-title { font-size: 18px; font-weight: 600; }
+    .eval-config { font-size: 12px; color: var(--text-tertiary); font-family: var(--font-mono); }
+    .eval-badcase { margin-top: 24px; }
+    .eval-badcase-title { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+    .eval-badcase-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; margin-bottom: 4px; border-radius: 6px; background: rgba(255,80,80,.06); font-size: 13px; }
+    .eval-badcase-item .bci-tag { font-size: 11px; padding: 1px 6px; border-radius: 4px; white-space: nowrap; }
+    .eval-badcase-item .bci-tag.miss { background: rgba(255,80,80,.15); color: #f87171; }
+    .eval-badcase-item .bci-tag.low { background: rgba(255,165,0,.15); color: #fbbf24; }
   </style>
 </head>
 <body>
@@ -20,11 +28,12 @@
     <div class="header-inner">
       <div class="header-left">
         <img src="/static/icon.png" alt="" class="header-icon" onerror="this.style.display='none'">
-        <span class="header-brand">Eval RAG 评测面板</span>
+        <span class="header-brand">RAG 评测面板</span>
       </div>
       <div class="header-right">
         <div class="eval-header-info">
           <span class="eval-last-run" id="eval-last-time"></span>
+          <span class="eval-config" id="eval-config-info"></span>
           <button class="btn btn-primary" id="btn-run-eval" onclick="runEval()">
             <span id="btn-eval-text">运行评测</span>
           </button>
@@ -43,20 +52,23 @@
     <div id="eval-empty" class="eval-empty">
       <div style="font-size:48px;margin-bottom:16px;">📊</div>
       <p>尚无评测数据</p>
-      <p style="font-size:13px;">点击「运行评测」开始评估你的 RAG 检索质量</p>
+      <p style="font-size:13px;">点击「运行评测」开始评估 RAG 检索质量</p>
     </div>
 
     <div id="eval-result-area" style="display:none;">
       <div class="eval-grid" id="eval-metrics"></div>
-      <div class="section-title">详情</div>
+      <div class="eval-badcase" id="eval-badcase" style="display:none;"></div>
+      <div class="section-title" style="margin-top:24px;">查询详情</div>
       <table class="eval-table" id="eval-table">
         <thead>
           <tr>
             <th>Query</th>
-            <th style="width:60px;text-align:center;">Hit</th>
-            <th style="width:80px;text-align:center;">MRR</th>
-            <th style="width:80px;text-align:center;">R@5</th>
-            <th style="width:80px;text-align:center;">延迟</th>
+            <th style="width:50px;text-align:center;">Hit</th>
+            <th style="width:70px;text-align:center;">MRR</th>
+            <th style="width:70px;text-align:center;">P@5</th>
+            <th style="width:70px;text-align:center;">R@5</th>
+            <th style="width:70px;text-align:center;">NDCG</th>
+            <th style="width:70px;text-align:center;">延迟</th>
           </tr>
         </thead>
         <tbody id="eval-table-body"></tbody>

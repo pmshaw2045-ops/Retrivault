@@ -56,7 +56,9 @@ class EvalRunner:
 
     # 最近一次评测结果（进程级缓存）
     _last_report: EvalReport | None = None
+    _prev_report: EvalReport | None = None
     _last_run_at: str | None = None
+    _last_config: dict | None = None
 
     def __init__(self, comps: AppComponents, dataset: GoldenDataset):
         self.comps = comps
@@ -84,7 +86,7 @@ class EvalRunner:
             avg_ndcg_5=sum(r.ndcg_5 for r in results) / n if n else 0,
             avg_latency_ms=sum(r.latency_ms for r in results) / n if n else 0,
         )
-        EvalRunner._save_last(report)
+        EvalRunner._save_last(report, config={"mode": mode, "top_k": top_k, "threshold": similarity_threshold})
         return report
 
     async def compare(self, configs: list[dict]) -> EvalCompareReport:
@@ -138,10 +140,13 @@ class EvalRunner:
     # ── 最近一次评测结果缓存 ──
 
     @classmethod
-    def _save_last(cls, report: EvalReport) -> None:
+    def _save_last(cls, report: EvalReport, config: dict | None = None) -> None:
         from datetime import datetime
+        if cls._last_report is not None:
+            cls._prev_report = cls._last_report
         cls._last_report = report
         cls._last_run_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cls._last_config = config
 
     @classmethod
     def get_last(cls) -> dict | None:
@@ -149,16 +154,32 @@ class EvalRunner:
         if cls._last_report is None:
             return None
         r = cls._last_report
+        prev = cls._prev_report
+
+        def _delta(curr, attr):
+            if prev is None:
+                return None
+            pv = getattr(prev, attr, 0)
+            return round(curr - pv, 4)
+
         return {
             "run_at": cls._last_run_at,
+            "config": cls._last_config,
             "total_queries": r.total_queries,
             "metrics": {
                 "hit_rate": round(r.avg_hit_rate, 4),
                 "mrr": round(r.avg_mrr, 4),
-                "recall@5": round(r.avg_recall_5, 4),
                 "precision@5": round(r.avg_precision_5, 4),
+                "recall@5": round(r.avg_recall_5, 4),
                 "ndcg@5": round(r.avg_ndcg_5, 4),
                 "avg_latency_ms": round(r.avg_latency_ms, 1),
+            },
+            "deltas": {
+                "hit_rate": _delta(r.avg_hit_rate, "avg_hit_rate"),
+                "mrr": _delta(r.avg_mrr, "avg_mrr"),
+                "precision@5": _delta(r.avg_precision_5, "avg_precision_5"),
+                "recall@5": _delta(r.avg_recall_5, "avg_recall_5"),
+                "ndcg@5": _delta(r.avg_ndcg_5, "avg_ndcg_5"),
             },
             "details": [
                 {
@@ -166,6 +187,8 @@ class EvalRunner:
                     "hit": er.hit,
                     "mrr": round(er.mrr, 4),
                     "recall@5": round(er.recall_5, 4),
+                    "precision@5": round(er.precision_5, 4),
+                    "ndcg@5": round(er.ndcg_5, 4),
                     "latency_ms": round(er.latency_ms, 1),
                     "retrieved": er.retrieved_docs[:5],
                 }
