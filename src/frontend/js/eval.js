@@ -73,6 +73,7 @@ function renderEvalResults(data) {
   metrics.innerHTML = [
     { label: 'Hit Rate', value: ((m.hit_rate || 0) * 100).toFixed(0) + '%' },
     { label: 'MRR', value: (m.mrr || 0).toFixed(2) },
+    { label: 'Precision@5', value: ((m['precision@5'] || 0) * 100).toFixed(0) + '%' },
     { label: 'Recall@5', value: ((m['recall@5'] || 0) * 100).toFixed(0) + '%' },
     { label: 'NDCG@5', value: (m['ndcg@5'] || 0).toFixed(2) },
   ].map(function(item) {
