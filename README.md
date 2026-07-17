@@ -26,6 +26,27 @@
 
 ## 快速开始（5 分钟）
 
+### 方式一：Docker（推荐）
+
+```bash
+# 1. 克隆仓库
+git clone https://github.com/pmshaw2045-ops/Retrivault.git
+cd Retrivault
+
+# 2. 配置 API Key
+cp .env.example .env
+# 编辑 .env，填入你的 LLM_API_KEY 和 EMBEDDING_API_KEY
+
+# 3. 启动（自动构建 + 运行）
+docker compose up -d
+
+# 4. 打开 http://localhost:8000
+# 首次启动会自动索引示例文档（6 篇）
+# 要使用自己的 Obsidian Vault，修改 docker-compose.yml 中的 vault 路径
+```
+
+### 方式二：本地开发
+
 ```bash
 # 1. 克隆
 git clone https://github.com/xiaoleishaw/retrivault.git

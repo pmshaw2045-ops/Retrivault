@@ -1,0 +1,19 @@
+services:
+  retrivault:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # 可选：挂载你的 Obsidian Vault
+      - /Users/admin/xiaolei/Shaw:/vault:ro
+      # 持久化索引数据
+      - retrivault-data:/app/data
+    environment:
+      - OBSIDIAN_VAULT_PATH=/vault
+      - NO_PROXY=localhost,127.0.0.1
+    env_file:
+      - .env
+    restart: unless-stopped
+
+volumes:
+  retrivault-data:
