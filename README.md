@@ -58,11 +58,11 @@ make start
 
 | 首页搜索 | SSE 管线控制台 |
 |:---:|:---:|
-| ![首页](assets/screenshot-home.svg) | ![结果页](assets/screenshot-results.svg) |
+| ![首页](assets/home.jpg) | ![结果页](assets/results.jpg) |
 
 | 参数设置 | RAG 评测面板 |
 |:---:|:---:|
-| ![参数设置](assets/screenshot-settings.svg) | ![评测面板](assets/screenshot-eval.svg) |
+| ![参数设置](assets/setting.jpg) | ![评测面板](assets/eval.jpg) |
 
 ---
 
