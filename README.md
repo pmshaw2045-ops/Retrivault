@@ -2,12 +2,8 @@
 
 > **面向 Obsidian 的 RAG 系统**——指定你的 Vault 目录，用自然语言搜索，获得带引用溯源的精准回答。
 
-[![Tests](https://img.shields.io/badge/tests-131_passing-brightgreen)](https://github.com/pmshaw2045-ops/Retrivault/actions)
 [![Python](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Code style](https://img.shields.io/badge/code%20style-ruff-purple)](https://github.com/astral-sh/ruff)
-[![FastAPI](https://img.shields.io/badge/FastAPI-3.0-009688?logo=fastapi)](https://fastapi.tiangolo.com)
-[![LanceDB](https://img.shields.io/badge/vector-LanceDB-orange?logo=lancedb)](https://lancedb.github.io/lancedb/)
 [![Last commit](https://img.shields.io/github/last-commit/pmshaw2045-ops/Retrivault)](https://github.com/pmshaw2045-ops/Retrivault/commits/main)
 [![Stars](https://img.shields.io/github/stars/pmshaw2045-ops/Retrivault?style=flat&logo=github)](https://github.com/pmshaw2045-ops/Retrivault)
 
