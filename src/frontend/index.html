@@ -148,7 +148,11 @@
     </div>
     <div class="modal-body" id="index-body">
       <div id="index-status-pre">
-        <p style="color:var(--text-secondary);margin-bottom:16px;">从当前源文件重建全部索引，可能需要几分钟。</p>
+        <p style="color:var(--text-secondary);margin-bottom:12px;">从当前源文件重建全部索引，可能需要几分钟。</p>
+        <p style="color:var(--text-tertiary);font-size:12px;line-height:1.7;margin-bottom:16px;">
+          ⚡ 日常不需要手动重建。增删改笔记后重启服务即自动增量更新。<br>
+          仅在以下情况手动重建：改了分块参数（chunk_size）、索引状态异常、想清空重置。
+        </p>
         <button class="btn btn-primary" id="btn-start-index" onclick="startReindex()">开始重建</button>
       </div>
       <div id="index-status-progress" style="display:none;">
