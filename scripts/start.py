@@ -34,7 +34,6 @@ def main():
 
     # 环境变量：绕过系统代理（macOS 用户常见卡点）
     env = os.environ.copy()
-    env.setdefault("HF_HUB_OFFLINE", "1")
     env["NO_PROXY"] = "localhost,127.0.0.1"
     env["no_proxy"] = "localhost,127.0.0.1"
 
@@ -46,7 +45,7 @@ def main():
         [python, "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"],
         cwd=str(project_root),
         env=env,
-        stdout=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
 
