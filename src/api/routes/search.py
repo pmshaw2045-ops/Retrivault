@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 from src.api.dependencies import get_components
 from src.api.models import SearchRequest, SearchResponse, SourceInfo
 from src.pipeline.query_rewriter import QueryRewriter
+from src.pipeline.retriever import display_score
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -176,7 +177,7 @@ def _build_retrieval_only_response(results, traces=None):
     for i, r in enumerate(results):
         sources.append(SourceInfo(
             index=i + 1, source_file=r.source_file, heading_path=r.heading_path,
-            score=round(r.score, 3), preview=r.content[:200],
+            score=display_score(r.score), preview=r.content[:200],
         ))
     answer = "（LLM 未配置）\n\n" + "\n\n---\n\n".join(
         f"[{i+1}] {s.preview}" for i, s in enumerate(sources)

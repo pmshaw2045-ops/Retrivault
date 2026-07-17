@@ -10,7 +10,7 @@
 from dataclasses import dataclass, field
 
 from src.interfaces import LLMProvider
-from src.pipeline.retriever import SearchResult
+from src.pipeline.retriever import SearchResult, display_score
 
 
 @dataclass
@@ -113,7 +113,7 @@ class Generator:
                 "index": i + 1,
                 "source_file": chunk.source_file,
                 "heading_path": chunk.heading_path,
-                "score": round(chunk.score, 3),
+                "score": display_score(chunk.score),
                 "preview": chunk.content[:100] + "..." if len(chunk.content) > 100 else chunk.content,
             })
 

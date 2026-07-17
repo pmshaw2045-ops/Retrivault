@@ -11,14 +11,24 @@ from src.interfaces import VectorStore
 
 
 def rescale_score(cosine_similarity: float) -> float:
-    """sigmoid 映射：raw cos_sim → [0,1] 用户友好分数
+    """sigmoid 映射：raw cos_sim → [0,1] 内部排序分数
 
-    使用温和的 k=5 使中低分段仍有区分度。
-    k=30 时 raw_sim=0.2→0.95，大量结果挤在 0.95+，无法区分。
+    使用温和的 k=5 使中低分段仍有区分度，确保 reranker 能拿到有意义的分布。
+    此分数用于阈值过滤和排序，不等于用户看到的展示分数。
     """
     k = 5.0
     midpoint = 0.3
     return 1.0 / (1.0 + math.exp(-k * (cosine_similarity - midpoint)))
+
+
+def display_score(internal_score: float) -> float:
+    """将内部排序分数映射为用户友好的展示分数
+
+    内部分数范围约 [0.18, 0.75]（k=5, midpoint=0.3 时）。
+    sqrt 拉伸使中高段感觉更相关，同时保持排序不变。
+    例：0.58 → 0.76, 0.73 → 0.85, 0.18 → 0.42
+    """
+    return round(internal_score ** 0.5, 3)
 
 
 @dataclass
