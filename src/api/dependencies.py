@@ -160,6 +160,7 @@ def _resolve_vault_path() -> str:
     # fallback: 未配置或路径不存在 → 使用示例文档
     samples = Path(__file__).resolve().parent.parent.parent / "docs" / "samples"
     if samples.exists():
+        print(f"📂 使用示例文档: {samples}（如需使用自己的 vault，请设置 OBSIDIAN_VAULT_PATH）")
         return str(samples)
     return ""
 
