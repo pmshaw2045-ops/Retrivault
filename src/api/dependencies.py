@@ -108,7 +108,7 @@ def init_components() -> AppComponents:
         device=config.embedding.device,
         batch_size=config.embedding.batch_size,
         api_key=os.getenv("EMBEDDING_API_KEY", os.getenv("LLM_API_KEY", "")),
-        base_url=os.getenv("EMBEDDING_BASE_URL", ""),
+        base_url=os.getenv("EMBEDDING_BASE_URL") or config.embedding.base_url,
     )
 
     # 向量存储
