@@ -67,7 +67,6 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
     t0 = time.time()
 
     # ── Step 1: Rewrite ──
-    yield _sse("rewrite", {"status": "running", "input": q})
     search_query = q
     rw_data = {
         "input": q, "output": q, "rewrites": [], "skipped": True,
@@ -75,6 +74,7 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
     }
     t1 = time.time()
     if rewrite and _should_rewrite(q):
+        yield _sse("rewrite", {"status": "running", "input": q})
         try:
             rewriter = _get_rewriter(comps.config)
             result = rewriter.rewrite(q)
@@ -91,7 +91,9 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
                 }
         except Exception:
             pass
-    yield _sse("rewrite", {"status": "done", **rw_data})
+        yield _sse("rewrite", {"status": "done", **rw_data})
+    else:
+        yield _sse("rewrite", {"status": "skipped", "reason": "rewrite disabled" if not rewrite else "keyword query"})
 
     # ── Step 2: Embed ──
     yield _sse("embed", {"status": "running", "query": search_query})
@@ -144,11 +146,11 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
         return
 
     # ── Step 4: Rerank ──
-    yield _sse("rerank", {"status": "running", "model": comps.config.rerank.model if comps.reranker else ""})
     t4 = time.time()
     reranked = False
-    before_rerank = [(r.source_file.split("/")[-1], round(r.score, 3)) for r in results]
     if comps.reranker and rerank:
+        yield _sse("rerank", {"status": "running", "model": comps.config.rerank.model})
+        before_rerank = [(r.source_file.split("/")[-1], round(r.score, 3)) for r in results]
         try:
             docs = [r.content for r in results]
             reranked_data = comps.reranker.rerank(search_query, docs, top_n=len(docs))
@@ -163,13 +165,15 @@ async def _search_events(q: str, top_k: int, mode: str, threshold: float, temp: 
             reranked = True
         except Exception:
             pass
-    after_rerank = [(r.source_file.split("/")[-1], round(r.score, 3)) for r in results]
-    yield _sse("rerank", {
-        "status": "done", "applied": reranked,
-        "model": comps.config.rerank.model if comps.reranker else "",
-        "before": before_rerank, "after": after_rerank,
-        "duration_ms": (time.time() - t4) * 1000,
-    })
+        after_rerank = [(r.source_file.split("/")[-1], round(r.score, 3)) for r in results]
+        yield _sse("rerank", {
+            "status": "done", "applied": reranked,
+            "model": comps.config.rerank.model,
+            "before": before_rerank, "after": after_rerank,
+            "duration_ms": (time.time() - t4) * 1000,
+        })
+    else:
+        yield _sse("rerank", {"status": "skipped", "applied": False, "reason": "rerank disabled"})
 
     # ── Step 5: Generate ──
     model_name = comps.config.llm.model
@@ -250,11 +254,14 @@ async def search_stream(
     mode: str = Query("vector", pattern="^(vector|hybrid)$"),
     threshold: float = Query(0.0, ge=0.0, le=1.0),
     temp: float = Query(0.3, ge=0.0, le=2.0),
-    rerank: bool = Query(True),
-    rewrite: bool = Query(True),
+    rerank: str = Query("true", pattern="^(true|false)$", description="关闭后跳过重排序"),
+    rewrite: str = Query("true", pattern="^(true|false)$", description="关闭后跳过 Query 改写"),
 ):
+    # bool 型 query param 必须用 str 手动转：FastAPI 的 bool("false") == True
+    rerank_enabled = rerank == "true"
+    rewrite_enabled = rewrite == "true"
     return StreamingResponse(
-        _search_events(q, top_k, mode, threshold, temp, rerank, rewrite),
+        _search_events(q, top_k, mode, threshold, temp, rerank_enabled, rewrite_enabled),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

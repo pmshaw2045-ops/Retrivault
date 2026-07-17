@@ -200,8 +200,9 @@ function _runText(step) {
   return { rewrite: '改写中…', embed: '向量化中…', retrieve: '检索中…', rerank: '重排中…', generate: '生成中…' }[step] || '';
 }
 function _sumText(step, data) {
+  if (data.status === 'skipped') return '跳过';
   switch (step) {
-    case 'rewrite':   return data.skipped ? '无需改写' : '"' + (data.input||'').slice(0,16) + '" → "' + (data.output||'').slice(0,20) + '"';
+    case 'rewrite':   return data.skipped ? '无需改写' : '' + (data.input||'').slice(0,16) + ' → ' + (data.output||'').slice(0,20) + '';
     case 'embed':     return (data.dims||0) + 'd · ' + (data.model||'').split('/').pop();
     case 'retrieve':  return (data.chunks_found||0) + ' chunks · ' + (data.mode||'') + ' · thresh=' + (data.threshold||0);
     case 'rerank':    return data.applied ? '已重排 · ' + (data.before||[]).length + ' docs' : '跳过';
