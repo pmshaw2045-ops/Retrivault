@@ -8,18 +8,20 @@ Hit Rate@k, MRR, NDCG@k, Recall@k, Precision@k
 import math
 
 
-def hit_rate(retrieved_docs: list[str], relevant_docs: list[str]) -> float:
-    """是否至少命中一个相关文档"""
+def hit_rate(retrieved_docs: list[str], relevant_docs: list[str], k: int | None = None) -> float:
+    """是否至少命中一个相关文档（只看前 k 个结果）"""
     if not relevant_docs:
         return 0.0
-    return 1.0 if any(d in relevant_docs for d in retrieved_docs) else 0.0
+    docs = retrieved_docs[:k] if k is not None else retrieved_docs
+    return 1.0 if any(d in relevant_docs for d in docs) else 0.0
 
 
-def mrr(retrieved_docs: list[str], relevant_docs: list[str]) -> float:
-    """Mean Reciprocal Rank — 第一个相关文档的排名倒数"""
+def mrr(retrieved_docs: list[str], relevant_docs: list[str], k: int | None = None) -> float:
+    """Mean Reciprocal Rank — 第一个相关文档的排名倒数（只看前 k 个结果）"""
     if not relevant_docs:
         return 0.0
-    for i, doc in enumerate(retrieved_docs):
+    docs = retrieved_docs[:k] if k is not None else retrieved_docs
+    for i, doc in enumerate(docs):
         if doc in relevant_docs:
             return 1.0 / (i + 1)
     return 0.0

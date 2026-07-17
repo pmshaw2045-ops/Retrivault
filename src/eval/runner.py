@@ -132,8 +132,8 @@ class EvalRunner:
 
         return EvalResult(
             query=gq.query,
-            hit=hit_rate(retrieved_docs, list(relevant_docs)),
-            mrr=mrr(retrieved_docs, list(relevant_docs)),
+            hit=hit_rate(retrieved_docs, list(relevant_docs), k=user_k),
+            mrr=mrr(retrieved_docs, list(relevant_docs), k=user_k),
             recall=recall_at_k(retrieved_docs, list(relevant_docs), k=user_k),
             precision=precision_at_k(retrieved_docs, list(relevant_docs), k=user_k),
             ndcg=ndcg_at_k(retrieved_docs, list(relevant_docs), k=user_k),
@@ -198,7 +198,7 @@ class EvalRunner:
                     "ndcg": round(er.ndcg, 4),
                     "top_k": er.top_k,
                     "latency_ms": round(er.latency_ms, 1),
-                    "retrieved": er.retrieved_docs[:5],
+                    "retrieved": er.retrieved_docs[:er.top_k],
                 }
                 for er in r.results
             ],

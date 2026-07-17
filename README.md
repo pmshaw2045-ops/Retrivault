@@ -56,13 +56,13 @@ make start
 
 ## 界面预览
 
-| 首页搜索 | SSE 管线控制台 |
-|:---:|:---:|
-| ![首页](assets/home.jpg) | ![结果页](assets/results.jpg) |
+![首页搜索 — 自然语言输入，一键搜索](assets/home.jpg)
 
-| 参数设置 | RAG 评测面板 |
-|:---:|:---:|
-| ![参数设置](assets/setting.jpg) | ![评测面板](assets/eval.jpg) |
+![参数设置 — 实时调节检索参数](assets/setting.jpg)
+
+![搜索结果 — SSE 管线逐步可视化，答案带引用溯源](assets/results.jpg)
+
+![RAG 评测面板 — 5 项指标 + 对比 Delta + 坏案例聚合](assets/eval.jpg)
 
 ---
 
