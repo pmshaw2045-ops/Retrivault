@@ -31,19 +31,18 @@
 git clone https://github.com/xiaoleishaw/retrivault.git
 cd retrivault
 
-|# 2. Install
-|python3 -m venv .venv && source .venv/bin/activate
-|pip install -r requirements.txt
-|pip install -e ".[dev]"  # for dev tools (pytest, ruff, mypy)
-|
-|# 3. Configure — two API keys
-|cp .env.example .env
-|# Edit .env: set your keys
-|#   LLM_API_KEY=sk-xxx           # DeepSeek for generation + rewrite
-|#   EMBEDDING_API_KEY=sk-xxx     # SiliconFlow for embedding (https://cloud.siliconflow.cn)
-|#
-|# No vault? No problem — it uses docs/samples/ automatically.
-|# Want local embedding? Set EMBEDDING_PROVIDER=local and uncomment deps.
+# 2. Install
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+# 3. Configure
+cp .env.example .env
+# Option A (recommended): DeepSeek LLM + SiliconFlow Embedding
+#   → Set LLM_API_KEY and EMBEDDING_API_KEY
+# Option B: Fully offline (Ollama + local BGE-M3)
+#   → Leave all API keys empty, set LLM_PROVIDER=ollama + EMBEDDING_PROVIDER=local
+# Option C: Just try with sample docs
+#   → Set API keys, skip OBSIDIAN_VAULT_PATH
 
 # 4. Launch
 make start
