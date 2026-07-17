@@ -2,7 +2,7 @@
 var _isRunning = false;
 
 function _loadEvalParams() {
-  var stored = sessionStorage.getItem('rag_params');
+  var stored = localStorage.getItem('rag_params');
   if (stored) { try { return JSON.parse(stored); } catch(e) {} }
   return { top_k: 5, mode: 'hybrid', temperature: 0.3, similarity_threshold: 0.1, rerank_enabled: true, rewrite_enabled: true };
 }
