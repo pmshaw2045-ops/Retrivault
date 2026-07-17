@@ -1,32 +1,178 @@
-# 示例金标数据集 — 基于 docs/samples/ 的 6 篇示例文档
-name: "rag-samples"
+# 完整评测数据集 — Retrivault 检索质量验证
+# 10 篇示例文档，覆盖 AI/Agent/历史/物理/Obsidian/RAG 等领域
+name: "retrivault-comprehensive"
 queries:
-  - query: "RAG的核心原理是什么"
+  # ── 正面测试（正向匹配）─────────────────────────────────
+
+  # RAG 基础（01-rag-basics.md）
+  - query: "RAG和微调相比有什么优势"
     relevant_docs:
       - "01-rag-basics.md"
-    description: "应召回RAG基础知识文档"
+    description: "RAG 核心优势：知识动态更新、事实准确性、可溯源"
 
+  - query: "RAG给大模型提供了什么能力"
+    relevant_docs:
+      - "01-rag-basics.md"
+    description: "知识库增强"
+
+  # Agent 架构（02-agent-architecture.md）
   - query: "Agent架构有哪些核心组件"
     relevant_docs:
       - "02-agent-architecture.md"
-    description: "应召回Agent架构选型指南"
+    description: "推理引擎、记忆系统、工具调用、规划器"
 
+  - query: "Agent的记忆系统怎么设计"
+    relevant_docs:
+      - "02-agent-architecture.md"
+    description: "短期+长期记忆管理"
+
+  # Embedding（03-embedding-guide.md）
   - query: "BGE-M3和其他Embedding模型比怎么样"
     relevant_docs:
       - "03-embedding-guide.md"
-    description: "应召回Embedding模型选型指南"
+    description: "多语言模型对比"
 
+  - query: "什么是向量维度和余弦相似度"
+    relevant_docs:
+      - "03-embedding-guide.md"
+    description: "Embedding 核心概念"
+
+  # Vector DB（04-vector-db-comparison.md）
   - query: "推荐用什么向量数据库"
     relevant_docs:
       - "04-vector-db-comparison.md"
-    description: "应召回向量数据库对比文档"
+    description: "LanceDB 对比其他方案"
 
+  # Obsidian（05-obsidian-workflow.md）
   - query: "Obsidian入门用法"
     relevant_docs:
       - "05-obsidian-workflow.md"
-    description: "应召回Obsidian工作流文档"
+    description: "原子化笔记、标签、双向链接"
 
-  - query: "RAG中Prompt设计的要点"
+  - query: "Obsidian的标签体系怎么设计"
+    relevant_docs:
+      - "05-obsidian-workflow.md"
+    description: "嵌套标签分类"
+
+  # Prompt（06-prompt-engineering.md）
+  - query: "RAG中Prompt设计的要点是什么"
     relevant_docs:
       - "06-prompt-engineering.md"
-    description: "应召回Prompt工程文档"
+    description: "Few-shot、角色设定、格式约束"
+
+  # 深度学习（07-deep-learning-evolution.md）
+  - query: "CNN和Transformer的核心区别是什么"
+    relevant_docs:
+      - "07-deep-learning-evolution.md"
+    description: "Transformer使用自注意力机制替代卷积"
+
+  - query: "残差网络（ResNet）解决了什么问题"
+    relevant_docs:
+      - "07-deep-learning-evolution.md"
+    description: "深层网络退化问题"
+
+  - query: "GPT模型的训练分为几个阶段"
+    relevant_docs:
+      - "07-deep-learning-evolution.md"
+    description: "预训练→指令微调→偏好对齐"
+
+  - query: "什么是MoE架构"
+    relevant_docs:
+      - "07-deep-learning-evolution.md"
+    description: "Mixture of Experts 条件计算"
+
+  # 多 Agent（08-multi-agent-collaboration.md）
+  - query: "多Agent协作有哪些模式"
+    relevant_docs:
+      - "08-multi-agent-collaboration.md"
+    description: "编排器、对话式、市场模式"
+
+  - query: "Agent之间如何通信"
+    relevant_docs:
+      - "08-multi-agent-collaboration.md"
+    description: "JSON-RPC、事件驱动、共享黑板"
+
+  - query: "多Agent系统怎么解决意见冲突"
+    relevant_docs:
+      - "08-multi-agent-collaboration.md"
+    description: "投票、分层裁决、置信度对比、外部验证"
+
+  # 二战（09-wwii-turning-points.md）
+  - query: "斯大林格勒战役为什么重要"
+    relevant_docs:
+      - "09-wwii-turning-points.md"
+    description: "东线转折点，德军首次大规模投降"
+
+  - query: "诺曼底登陆投入了多少兵力"
+    relevant_docs:
+      - "09-wwii-turning-points.md"
+    description: "156,000人、6,939艘舰船"
+
+  - query: "中途岛海战中日本损失了多少航母"
+    relevant_docs:
+      - "09-wwii-turning-points.md"
+    description: "4艘主力航母被击沉"
+
+  # 量子力学（10-quantum-mechanics.md）
+  - query: "不确定性原理说的是什么"
+    relevant_docs:
+      - "10-quantum-mechanics.md"
+    description: "无法同时精确测量位置和动量"
+
+  - query: "量子纠缠是怎么回事"
+    relevant_docs:
+      - "10-quantum-mechanics.md"
+    description: "粒子纠缠态、非定域性"
+
+  - query: "量子计算机和传统计算机的区别"
+    relevant_docs:
+      - "10-quantum-mechanics.md"
+    description: "量子比特叠加态、量子门、量子算法"
+
+  # ── 负面测试（不应匹配）─────────────────────────────────
+
+  # 明确不存在的知识
+  - query: "2026年诺贝尔物理学奖颁给了谁"
+    relevant_docs: []
+    description: "文档中无任何诺贝尔奖信息"
+
+  - query: "iPhone 17的芯片性能如何"
+    relevant_docs: []
+    description: "文档中无消费电子产品信息"
+
+  - query: "推荐几本Python入门书籍"
+    relevant_docs: []
+    description: "文档中无书籍推荐"
+
+  # 易混淆的跨域查询
+  - query: "量子计算对深度学习有什么影响"
+    relevant_docs:
+      - "10-quantum-mechanics.md"
+      - "07-deep-learning-evolution.md"
+    description: "涉及两个领域，应找到量子力学和深度学习文档各一"
+
+  - query: "Agent架构是否可以用在客服系统"
+    relevant_docs:
+      - "08-multi-agent-collaboration.md"
+    description: "文档中有客服Agent案例，不应只搜到Agent架构"
+
+  # 边界情况
+  - query: "你好"
+    relevant_docs: []
+    description: "极短查询，不应命中任何特定文档"
+
+  - query: "什么是好笔记"
+    relevant_docs:
+      - "05-obsidian-workflow.md"
+    description: "关于笔记方法的内容"
+
+  # 同义词/近义表达
+  - query: "第二场世界大战哪里是拐点"
+    relevant_docs:
+      - "09-wwii-turning-points.md"
+    description: "关键词转折点、关键战役应命中二战文档"
+
+  - query: "纠缠态量子比特超距作用"
+    relevant_docs:
+      - "10-quantum-mechanics.md"
+    description: "关键词组合应命中量子力学文档，即使措辞不完整"
