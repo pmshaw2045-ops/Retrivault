@@ -32,7 +32,7 @@ async function runEval() {
 
   btn.disabled = true;
   btnText.textContent = '评测中…';
-  loading.style.display = 'block';
+  loading.style.display = 'flex';
   empty.style.display = 'none';
   result.style.display = 'none';
 

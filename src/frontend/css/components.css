@@ -471,8 +471,8 @@
 /* ── Eval Dashboard (用于 eval.html) ── */
 .eval-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-4);
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-3);
   margin: var(--space-6) 0;
 }
 
