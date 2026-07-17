@@ -52,7 +52,19 @@ make start
 
 > **没有 Vault？没问题。** Retrivault 内置了 `docs/samples/` 中的 6 篇示例文档。不配 `OBSIDIAN_VAULT_PATH` 即可自动使用。
 
-***
+---
+
+## 界面预览
+
+| 首页搜索 | SSE 管线控制台 |
+|:---:|:---:|
+| ![首页](assets/screenshot-home.svg) | ![结果页](assets/screenshot-results.svg) |
+
+| 参数设置 | RAG 评测面板 |
+|:---:|:---:|
+| ![参数设置](assets/screenshot-settings.svg) | ![评测面板](assets/screenshot-eval.svg) |
+
+---
 
 ## 架构
 
