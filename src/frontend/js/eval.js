@@ -65,7 +65,7 @@ function renderEvalResults(data) {
 
   // 配置信息
   var cfg = data.config || {};
-  configInfo.textContent = cfg.mode ? [cfg.mode, 'k=' + cfg.top_k, 'th=' + cfg.threshold].join(' · ') : '';
+  configInfo.textContent = cfg.mode ? '模式=' + cfg.mode + ' · K=' + cfg.top_k + ' · 阈值=' + cfg.threshold : '';
 
   // Metric cards with delta
   var m = data.metrics || {};
