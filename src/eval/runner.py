@@ -110,15 +110,17 @@ class EvalRunner:
             query_vector = self.comps.embedder.embed_query(gq.query)
         except Exception:
             return EvalResult(
-                query=gq.query, hit=0, mrr=0, recall_5=0,
-                precision_5=0, ndcg_5=0, latency_ms=0, chunks_found=0,
+                query=gq.query, hit=0, mrr=0, recall=0,
+                precision=0, ndcg=0, top_k=kwargs.get("top_k", 5),
+                latency_ms=0, chunks_found=0,
             )
 
-        top_k = kwargs.get("top_k", 5) * 2
+        internal_k = kwargs.get("top_k", 5) * 2
+        user_k = kwargs.get("top_k", 5)
         results = await self.comps.retriever.search_async(
             query_vector,
             query_text=gq.query,
-            top_k=top_k,
+            top_k=internal_k,
             similarity_threshold=kwargs.get("similarity_threshold", 0.0),
             mode=kwargs.get("mode", "vector"),
         )
@@ -132,10 +134,10 @@ class EvalRunner:
             query=gq.query,
             hit=hit_rate(retrieved_docs, list(relevant_docs)),
             mrr=mrr(retrieved_docs, list(relevant_docs)),
-            recall=recall_at_k(retrieved_docs, list(relevant_docs), k=top_k),
-            precision=precision_at_k(retrieved_docs, list(relevant_docs), k=top_k),
-            ndcg=ndcg_at_k(retrieved_docs, list(relevant_docs), k=top_k),
-            top_k=top_k,
+            recall=recall_at_k(retrieved_docs, list(relevant_docs), k=user_k),
+            precision=precision_at_k(retrieved_docs, list(relevant_docs), k=user_k),
+            ndcg=ndcg_at_k(retrieved_docs, list(relevant_docs), k=user_k),
+            top_k=user_k,
             latency_ms=latency,
             chunks_found=len(retrieved_docs),
             retrieved_docs=retrieved_docs,

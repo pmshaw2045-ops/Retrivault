@@ -65,9 +65,9 @@ async def run_eval(req: EvalRequest):
         "metrics": {
             "hit_rate": round(report.avg_hit_rate, 4),
             "mrr": round(report.avg_mrr, 4),
-            "recall@5": round(report.avg_recall_5, 4),
-            "precision@5": round(report.avg_precision_5, 4),
-            "ndcg@5": round(report.avg_ndcg_5, 4),
+            "recall@5": round(report.avg_recall, 4),
+            "precision@5": round(report.avg_precision, 4),
+            "ndcg@5": round(report.avg_ndcg, 4),
             "avg_latency_ms": round(report.avg_latency_ms, 1),
         },
         "details": [
@@ -75,7 +75,9 @@ async def run_eval(req: EvalRequest):
                 "query": r.query,
                 "hit": r.hit,
                 "mrr": round(r.mrr, 4),
-                "recall@5": round(r.recall_5, 4),
+                "recall@5": round(r.recall, 4),
+                "precision@5": round(r.precision, 4),
+                "ndcg@5": round(r.ndcg, 4),
                 "latency_ms": round(r.latency_ms, 1),
                 "retrieved": r.retrieved_docs[:5],
             }
@@ -108,9 +110,9 @@ async def compare_eval(req: CompareRequest):
                 "metrics": {
                     "hit_rate": round(r.avg_hit_rate, 4),
                     "mrr": round(r.avg_mrr, 4),
-                    "recall@5": round(r.avg_recall_5, 4),
-                    "precision@5": round(r.avg_precision_5, 4),
-                    "ndcg@5": round(r.avg_ndcg_5, 4),
+                    "recall@5": round(r.avg_recall, 4),
+                    "precision@5": round(r.avg_precision, 4),
+                    "ndcg@5": round(r.avg_ndcg, 4),
                     "avg_latency_ms": round(r.avg_latency_ms, 1),
                 },
             }
